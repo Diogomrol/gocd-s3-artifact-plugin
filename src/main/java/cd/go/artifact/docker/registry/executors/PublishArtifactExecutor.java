@@ -64,7 +64,7 @@ public class PublishArtifactExecutor implements RequestExecutor {
             request.setMetadata(metadata);
             s3.putObject(request);
 
-            publishArtifactResponse.addMetadata("source", sourceFile);
+            publishArtifactResponse.addMetadata("Source", sourceFile);
             consoleLogger.info(String.format("Source file `%s` successfully pushed to S3 bucket `%s`.", sourceFile, artifactStoreConfig.getS3bucket()));
 
             return DefaultGoPluginApiResponse.success(publishArtifactResponse.toJSON());

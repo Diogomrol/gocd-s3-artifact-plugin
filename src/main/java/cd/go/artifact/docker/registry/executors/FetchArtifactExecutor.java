@@ -25,13 +25,11 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.spotify.docker.client.DockerClient;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.DefaultGoPluginApiResponse;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
-
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import static cd.go.artifact.docker.registry.S3ArtifactPlugin.LOG;
@@ -58,6 +56,7 @@ public class FetchArtifactExecutor implements RequestExecutor {
             final Map<String, String> artifactMap = fetchArtifactRequest.getMetadata();
             validateMetadata(artifactMap);
 
+            final String workingDir = fetchArtifactRequest.getAgentWorkingDir();
             final String sourceFileToGet = artifactMap.get("Source");
 
             consoleLogger.info(String.format("Retrieving file `%s` from S3 bucket `%s`.", sourceFileToGet, fetchArtifactRequest.getArtifactStoreConfig().getS3bucket()));
@@ -66,14 +65,19 @@ public class FetchArtifactExecutor implements RequestExecutor {
             AmazonS3 s3 = clientFactory.s3(fetchArtifactRequest.getArtifactStoreConfig());
             S3Object s3Object = s3.getObject(fetchArtifactRequest.getArtifactStoreConfig().getS3bucket(), sourceFileToGet);
             S3ObjectInputStream s3InputStream = s3Object.getObjectContent();
-            FileOutputStream fileOutput = new FileOutputStream(new File(sourceFileToGet));
-            byte[] read_buf = new byte[1024];
-            int read_len = 0;
-            while ((read_len = s3InputStream.read(read_buf)) > 0) {
-                fileOutput.write(read_buf, 0, read_len);
+            InputStream fileReader = new BufferedInputStream(s3InputStream);
+            File outFile = new File(Paths.get(workingDir, sourceFileToGet).toString());
+            OutputStream writer = new BufferedOutputStream(new FileOutputStream(outFile));
+
+            int read_length = -1;
+
+            while ((read_length = fileReader.read()) != -1) {
+                writer.write(read_length);
             }
-            s3InputStream.close();
-            fileOutput.close();
+
+            writer.flush();
+            writer.close();
+            fileReader.close();
 
             consoleLogger.info(String.format("Source `%s` successfully pulled from S3 bucket `%s`.", sourceFileToGet, fetchArtifactRequest.getArtifactStoreConfig().getS3bucket()));
 
@@ -92,10 +96,11 @@ public class FetchArtifactExecutor implements RequestExecutor {
         }
 
         if (!artifactMap.containsKey("Source")) {
-            throw new RuntimeException(String.format("Cannot fetch the source file from S3: Invalid metadata received from the GoCD server. The artifact metadata must contain the key `%s`.", "source"));
+            throw new RuntimeException(String.format("Cannot fetch the source file from S3: Invalid metadata received from the GoCD server. The artifact metadata must contain the key `%s`.", "Source"));
         }
     }
 
+    // TODO Diogomrorl: Maybe this can be moved to a separate file under model to keep coherence
     protected static class FetchArtifactRequest {
         @Expose
         @SerializedName("store_configuration")
@@ -104,16 +109,25 @@ public class FetchArtifactExecutor implements RequestExecutor {
         @SerializedName("artifact_metadata")
         private Map<String, String> metadata;
 
+        @Expose
+        @SerializedName("agent_working_directory")
+        private String agentWorkingDir;
+
         public FetchArtifactRequest() {
         }
 
-        public FetchArtifactRequest(ArtifactStoreConfig artifactStoreConfig, Map<String, String> metadata) {
+        public FetchArtifactRequest(ArtifactStoreConfig artifactStoreConfig, Map<String, String> metadata, String agentWorkingDir) {
             this.artifactStoreConfig = artifactStoreConfig;
             this.metadata = metadata;
+            this.agentWorkingDir = agentWorkingDir;
         }
 
         public ArtifactStoreConfig getArtifactStoreConfig() {
             return artifactStoreConfig;
+        }
+
+        public String getAgentWorkingDir() {
+            return agentWorkingDir;
         }
 
         public Map<String, String> getMetadata() {

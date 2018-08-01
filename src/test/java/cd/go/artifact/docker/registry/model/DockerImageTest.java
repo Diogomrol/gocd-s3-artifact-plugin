@@ -17,7 +17,7 @@
 package cd.go.artifact.docker.registry.model;
 
 import com.google.gson.JsonSyntaxException;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

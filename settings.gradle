@@ -1,4 +1,5 @@
 /*
+ * Copyright 2018 Diogo Oliveira
  * Copyright 2017 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,4 +15,4 @@
  * limitations under the License.
  */
 
-rootProject.name = 'docker-registry-artifact-plugin'
+rootProject.name = 's3-artifact-plugin'

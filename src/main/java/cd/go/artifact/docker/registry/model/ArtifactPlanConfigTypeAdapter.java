@@ -1,10 +1,9 @@
 package cd.go.artifact.docker.registry.model;
 
 import com.google.gson.*;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Type;
-import java.util.Optional;
 
 public class ArtifactPlanConfigTypeAdapter implements JsonDeserializer<ArtifactPlanConfig>, JsonSerializer<ArtifactPlanConfig> {
 

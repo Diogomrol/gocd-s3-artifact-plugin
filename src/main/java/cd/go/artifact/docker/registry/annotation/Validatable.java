@@ -18,7 +18,7 @@ package cd.go.artifact.docker.registry.annotation;
 
 import cd.go.artifact.docker.registry.utils.Util;
 import com.google.gson.reflect.TypeToken;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;

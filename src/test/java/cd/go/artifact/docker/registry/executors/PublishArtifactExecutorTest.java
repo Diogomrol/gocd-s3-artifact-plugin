@@ -23,7 +23,6 @@ import cd.go.artifact.docker.registry.model.ArtifactStore;
 import cd.go.artifact.docker.registry.model.ArtifactStoreConfig;
 import cd.go.artifact.docker.registry.model.PublishArtifactRequest;
 import com.amazonaws.SdkClientException;
-import com.spotify.docker.client.exceptions.DockerException;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
 import org.junit.Before;
@@ -39,9 +38,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -68,7 +64,7 @@ public class PublishArtifactExecutorTest {
     }
 
     @Test
-    public void shouldPublishArtifactUsingSourceFile() throws IOException, DockerException, InterruptedException {
+    public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json");
         final ArtifactStoreConfig storeConfig = new ArtifactStoreConfig("test", "test", "test");
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);

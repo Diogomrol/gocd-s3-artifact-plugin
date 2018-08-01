@@ -1,6 +1,6 @@
 package cd.go.artifact.docker.registry.model;
 
-import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.util.Map;
 import java.util.regex.Pattern;

@@ -5,6 +5,31 @@
 </div>
 
 <div class="form_item_block">
+    <label ng-class="{'is-invalid-label': GOINPUTNAME[Region].$error.server}">Region:<span class='asterix'>*</span></label>
+    <select ng-class="{'is-invalid-input': GOINPUTNAME[Region].$error.server}" ng-model="Region" ng-required="true">
+        <option value="ap-northeast-1">ap-northeast-1</option>
+        <option value="ap-northeast-2">ap-northeast-2</option>
+        <option value="ap-south-1">ap-south-1</option>
+        <option value="ap-southeast-1">ap-southeast-1</option>
+        <option value="ap-southeast-2">ap-southeast-2</option>
+        <option value="ca-central-1">ca-central-1</option>
+        <option value="cn-north-1">cn-north-1</option>
+        <option value="cn-northwest-1">cn-northwest-1</option>
+        <option value="eu-central-1">eu-central-1</option>
+        <option value="eu-west-1">eu-west-1</option>
+        <option value="eu-west-2">eu-west-2</option>
+        <option value="eu-west-3">eu-west-3</option>
+        <option value="govcloud">govcloud</option>
+        <option value="sa-east-1">sa-east-1</option>
+        <option value="us-east-1">us-east-1</option>
+        <option value="us-east-2">us-east-2</option>
+        <option value="us-west-1">us-west-1</option>
+        <option value="us-west-2">us-west-2</option>
+    </select>
+    <span class="form_error form-error" ng-class="{'is-visible': GOINPUTNAME[Region].$error.server}" ng-show="GOINPUTNAME[Region].$error.server">{{GOINPUTNAME[Region].$error.server}}</span>
+</div>
+
+<div class="form_item_block">
     <label ng-class="{'is-invalid-label': GOINPUTNAME[AWSAccessKey].$error.server}">AWS Access Key Id:<span class='asterix'>*</span></label>
     <input ng-class="{'is-invalid-input': GOINPUTNAME[AWSAccessKey].$error.server}" type="text" ng-model="AWSAccessKey" ng-required="true" placeholder="value"/>
     <span class="form_error form-error" ng-class="{'is-visible': GOINPUTNAME[AWSAccessKey].$error.server}" ng-show="GOINPUTNAME[AWSAccessKey].$error.server">{{GOINPUTNAME[AWSAccessKey].$error.server}}</span>

@@ -51,6 +51,10 @@ public class ValidateArtifactStoreConfigExecutorExecutorTest {
                 "    \"message\": \"S3Bucket must not be blank.\"\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"key\": \"Region\",\n" +
+                "    \"message\": \"Region must not be blank.\"\n" +
+                "  },\n" +
+                "  {\n" +
                 "    \"key\": \"AWSAccessKey\",\n" +
                 "    \"message\": \"AWSAccessKey must not be blank.\"\n" +
                 "  },\n" +
@@ -66,6 +70,7 @@ public class ValidateArtifactStoreConfigExecutorExecutorTest {
     public void shouldValidateProperData() throws JSONException {
         String requestBody = new JSONObject()
                 .put("S3Bucket", "http://localhost/index")
+                .put("Region", "us-west-1")
                 .put("AWSAccessKey", "chuck-norris")
                 .put("AWSSecretAccessKey", "chuck-norris-doesnt-need-passwords")
                 .toString();

@@ -35,6 +35,7 @@ public class PublishArtifactRequestTest {
                 "  \"artifact_store\": {\n" +
                 "    \"configuration\": {\n" +
                 "      \"S3Bucket\": \"s3-url\",\n" +
+                "      \"Region\": \"us-west-1\",\n" +
                 "      \"AWSAccessKey\": \"aws-access-key\",\n" +
                 "      \"AWSSecretAccessKey\": \"aws-secret-access-key\"\n" +
                 "    },\n" +
@@ -49,7 +50,7 @@ public class PublishArtifactRequestTest {
 
         assertThat(publishArtifactRequest.getArtifactStore().getId()).isEqualTo("s3-store");
         assertThat(publishArtifactRequest.getArtifactStore().getArtifactStoreConfig())
-                .isEqualTo(new ArtifactStoreConfig("s3-url", "aws-access-key", "aws-secret-access-key"));
+                .isEqualTo(new ArtifactStoreConfig("s3-url", "us-west-1", "aws-access-key", "aws-secret-access-key"));
 
         assertThat(publishArtifactRequest.getArtifactPlan())
                 .isEqualTo(new ArtifactPlan("installers", "s3-store", "alpine-build.json"));

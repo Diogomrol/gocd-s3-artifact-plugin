@@ -37,6 +37,13 @@ public class GetArtifactStoreConfigMetadataExecutorTest {
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"key\": \"Region\",\n" +
+                "    \"metadata\": {\n" +
+                "      \"required\": true,\n" +
+                "      \"secure\": false\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
                 "    \"key\": \"AWSAccessKey\",\n" +
                 "    \"metadata\": {\n" +
                 "      \"required\": true,\n" +

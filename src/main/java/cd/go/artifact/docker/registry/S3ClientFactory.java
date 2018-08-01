@@ -20,6 +20,6 @@ public class S3ClientFactory {
 
     private static AmazonS3 createClient(ArtifactStoreConfig artifactStoreConfig) throws SdkClientException {
         BasicAWSCredentials awsCredentials = new BasicAWSCredentials(artifactStoreConfig.getAwsaccesskey(), artifactStoreConfig.getAwssecretaccesskey());
-        return AmazonS3ClientBuilder.standard().withRegion(Regions.EU_WEST_1).withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).build();
+        return AmazonS3ClientBuilder.standard().withRegion(Regions.fromName(artifactStoreConfig.getRegion())).withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).build();
     }
 }

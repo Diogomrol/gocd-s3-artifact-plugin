@@ -29,6 +29,11 @@ public class ArtifactStoreConfig implements Validatable {
     private String s3bucket;
 
     @Expose
+    @SerializedName("Region")
+    @FieldMetadata(key = "Region", required = true, secure = false)
+    private String region;
+
+    @Expose
     @SerializedName("AWSAccessKey")
     @FieldMetadata(key = "AWSAccessKey", required = true)
     private String awsaccesskey;
@@ -42,8 +47,9 @@ public class ArtifactStoreConfig implements Validatable {
     public ArtifactStoreConfig() {
     }
 
-    public ArtifactStoreConfig(String s3bucket, String awsaccesskey, String awssecretaccesskey) {
+    public ArtifactStoreConfig(String s3bucket, String region, String awsaccesskey, String awssecretaccesskey) {
         this.s3bucket = s3bucket;
+        this.region = region;
         this.awsaccesskey = awsaccesskey;
         this.awssecretaccesskey = awssecretaccesskey;
     }
@@ -51,6 +57,8 @@ public class ArtifactStoreConfig implements Validatable {
     public String getS3bucket() {
         return s3bucket;
     }
+
+    public String getRegion () { return region; }
 
     public String getAwsaccesskey() {
         return awsaccesskey;
@@ -68,6 +76,7 @@ public class ArtifactStoreConfig implements Validatable {
         ArtifactStoreConfig that = (ArtifactStoreConfig) o;
 
         if (s3bucket != null ? !s3bucket.equals(that.s3bucket) : that.s3bucket != null) return false;
+        if (region != null ? !region.equals(that.region) : that.region != null) return false;
         if (awsaccesskey != null ? !awsaccesskey.equals(that.awsaccesskey) : that.awsaccesskey != null) return false;
         return awssecretaccesskey != null ? awssecretaccesskey.equals(that.awssecretaccesskey) : that.awssecretaccesskey == null;
     }
@@ -75,6 +84,7 @@ public class ArtifactStoreConfig implements Validatable {
     @Override
     public int hashCode() {
         int result = s3bucket != null ? s3bucket.hashCode() : 0;
+        result = 31 * result + (region != null ? region.hashCode() : 0);
         result = 31 * result + (awsaccesskey != null ? awsaccesskey.hashCode() : 0);
         result = 31 * result + (awssecretaccesskey != null ? awssecretaccesskey.hashCode() : 0);
         return result;

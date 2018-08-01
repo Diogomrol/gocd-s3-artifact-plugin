@@ -66,7 +66,7 @@ public class PublishArtifactExecutorTest {
     @Test
     public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json");
-        final ArtifactStoreConfig storeConfig = new ArtifactStoreConfig("test", "test", "test");
+        final ArtifactStoreConfig storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
         final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
 

@@ -1,5 +1,7 @@
 # Changelog
 
-## 1.0.0 - 2018-07-31
+## 1.0.0 - 2018-08-31
 
-Work in Progress
+- Support the creation of an artifact store for AWS S3 using AWS Credentials (AWS Access Key and AWS Secret Access Key)
+- Support for publishing file artifacts to S3 (not folders or wildcard paths)
+- Support for fetching files from S3

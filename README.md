@@ -55,7 +55,7 @@ To pull an image from an upstream pipeline or stage, the following information i
 1. Specify a `Pipeline Dependency` material if you have an upstream pipeline you want to pull the docker image.
 2. Navigate to `Tasks` tab under Stage > Job
 3. Add a `Fetch Artifact` task
-   -  Choose artifact origin type `External`
+   - Choose artifact origin type `External`
    - Specify the pipeline, stage and job name.
    - Specify the artifact id of the external artifact that belongs to the upstream job
 

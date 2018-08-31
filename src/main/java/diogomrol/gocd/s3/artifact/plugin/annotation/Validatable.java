@@ -36,7 +36,7 @@ public interface Validatable {
 
     default List<ValidationError> validateAllFieldsAsRequired() {
         return toProperties().entrySet().stream()
-                .filter(entry -> StringUtils.isBlank(entry.getValue()))
+                .filter(entry -> StringUtils.isBlank(entry.getValue()) && !entry.getKey().equals("Destination"))
                 .map(entry -> new ValidationError(entry.getKey(), entry.getKey() + " must not be blank."))
                 .collect(Collectors.toList());
     }

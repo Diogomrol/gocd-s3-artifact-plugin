@@ -1,6 +1,11 @@
 <div class="form_item_block">
     <label ng-class="{'is-invalid-label': GOINPUTNAME[Source].$error.server}">Source:</label>
-	<span class="contextual_help has_go_tip_right" title="The file or folders to publish to the server. Go will only upload files that are in the working directory of the job. You can use wildcards to specify the files and folders to upload (** means any path, * means any file or folder name)."></span>
     <input ng-class="{'is-invalid-input': GOINPUTNAME[Source].$error.server}" type="text" ng-model="Source" placeholder="source_file.txt"/>
     <span class="form_error form-error" ng-class="{'is-visible': GOINPUTNAME[Source].$error.server}" ng-show="GOINPUTNAME[Source].$error.server">{{GOINPUTNAME[Source].$error.server}}</span>
+</div>
+
+<div class="form_item_block">
+    <label ng-class="{'is-invalid-label': GOINPUTNAME[Destination].$error.server}">Destination:</label>
+    <input ng-class="{'is-invalid-input': GOINPUTNAME[Destination].$error.server}" type="text" ng-model="Destination" ng-required="false" placeholder="DestinationFolder"/>
+    <span class="form_error form-error" ng-class="{'is-visible': GOINPUTNAME[Destination].$error.server}" ng-show="GOINPUTNAME[Destination].$error.server">{{GOINPUTNAME[Destination].$error.server}}</span>
 </div>

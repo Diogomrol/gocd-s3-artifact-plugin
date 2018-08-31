@@ -18,6 +18,7 @@ package diogomrol.gocd.s3.artifact.plugin.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import java.util.Optional;
 
 public class ArtifactPlan {
     @Expose
@@ -35,10 +36,10 @@ public class ArtifactPlan {
     public ArtifactPlan() {
     }
 
-    public ArtifactPlan(String id, String storeId, String sourceFile) {
+    public ArtifactPlan(String id, String storeId, String sourceFile, Optional<String> destination) {
         this.id = id;
         this.storeId = storeId;
-        this.artifactPlanConfig = new SourceFileArtifactPlanConfig(sourceFile);
+        this.artifactPlanConfig = new S3FileArtifactPlanConfig(sourceFile, destination);
     }
 
     public String getId() {

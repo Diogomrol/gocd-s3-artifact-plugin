@@ -4,6 +4,7 @@ import com.google.gson.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 public class ArtifactPlanConfigTypeAdapter implements JsonDeserializer<ArtifactPlanConfig>, JsonSerializer<ArtifactPlanConfig> {
 
@@ -11,16 +12,24 @@ public class ArtifactPlanConfigTypeAdapter implements JsonDeserializer<ArtifactP
     public ArtifactPlanConfig deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = json.getAsJsonObject();
         if (isBuildFileConfig(jsonObject)) {
-            return new SourceFileArtifactPlanConfig(jsonObject.get("Source").getAsString());
+            return new S3FileArtifactPlanConfig(jsonObject.get("Source").getAsString(), parseDestination(jsonObject));
         } else {
             throw new JsonParseException("Ambiguous or unknown json. `Source` property must be specified.");
         }
     }
 
+    private Optional<String> parseDestination(JsonObject jsonObject) {
+        JsonElement destination = jsonObject.get("Destination");
+        if (destination != null && StringUtils.isNotBlank(destination.getAsString())) {
+            return Optional.of(destination.getAsString());
+        }
+        return Optional.empty();
+    }
+
     @Override
     public JsonElement serialize(ArtifactPlanConfig src, Type typeOfSrc, JsonSerializationContext context) {
-        if (src instanceof SourceFileArtifactPlanConfig) {
-            return context.serialize(src, SourceFileArtifactPlanConfig.class);
+        if (src instanceof S3FileArtifactPlanConfig) {
+            return context.serialize(src, S3FileArtifactPlanConfig.class);
         }
         throw new JsonIOException("Unknown type of ArtifactPlanConfig");
     }

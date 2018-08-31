@@ -58,10 +58,19 @@ public class PublishArtifactExecutor implements RequestExecutor {
         try {
             final AmazonS3 s3 = clientFactory.s3(artifactStoreConfig);
             final String sourceFile = artifactPlan.getArtifactPlanConfig().getSource();
+            final String destinationFolder = artifactPlan.getArtifactPlanConfig().getDestination();
             final String s3bucket = artifactStoreConfig.getS3bucket();
             final String workingDir = publishArtifactRequest.getAgentWorkingDir();
+            String s3bucketPath;
 
-            PutObjectRequest request = new PutObjectRequest(s3bucket, sourceFile, new File(Paths.get(workingDir, sourceFile).toString()));
+            if(!destinationFolder.isEmpty()) {
+                s3bucketPath = Paths.get(s3bucket, destinationFolder).toString().replace("\\", "/");
+            }
+            else {
+                s3bucketPath = Paths.get(s3bucket).toString().replace("\\", "/");
+            }
+
+            PutObjectRequest request = new PutObjectRequest(s3bucketPath, sourceFile, new File(Paths.get(workingDir, sourceFile).toString()));
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType("plain/text");
             request.setMetadata(metadata);

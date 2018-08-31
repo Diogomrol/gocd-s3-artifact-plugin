@@ -18,7 +18,7 @@ package diogomrol.gocd.s3.artifact.plugin.executors;
 
 import diogomrol.gocd.s3.artifact.plugin.annotation.ConfigMetadata;
 import diogomrol.gocd.s3.artifact.plugin.annotation.MetadataHelper;
-import diogomrol.gocd.s3.artifact.plugin.model.SourceFileArtifactPlanConfig;
+import diogomrol.gocd.s3.artifact.plugin.model.S3FileArtifactPlanConfig;
 import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -46,7 +46,7 @@ public class GetPublishArtifactViewExecutorTest extends ViewTest {
     @Override
     protected List<ConfigMetadata> getMetadataList() {
         List<ConfigMetadata> configMetadata = new ArrayList<>();
-        configMetadata.addAll(MetadataHelper.getMetadata(SourceFileArtifactPlanConfig.class));
+        configMetadata.addAll(MetadataHelper.getMetadata(S3FileArtifactPlanConfig.class));
         return configMetadata;
     }
 

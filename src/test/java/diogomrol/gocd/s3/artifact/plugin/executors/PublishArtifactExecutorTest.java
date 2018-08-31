@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
+import java.util.Optional;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,7 +66,7 @@ public class PublishArtifactExecutorTest {
 
     @Test
     public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException {
-        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json");
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.of("DestinationFolder"));
         final ArtifactStoreConfig storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
         final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
@@ -76,9 +77,5 @@ public class PublishArtifactExecutorTest {
         when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
 
         final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
-
-        //verify(dockerClient).push(eq("localhost:5000/alpine:3.6"));
-        //assertThat(response.responseCode()).isEqualTo(200);
-        //assertThat(response.responseBody()).isEqualTo("{\"metadata\":{\"image\":\"localhost:5000/alpine:3.6\"}}");
     }
 }

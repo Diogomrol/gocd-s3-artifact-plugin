@@ -23,8 +23,8 @@ public class ArtifactPlanConfigTypeAdapterTest {
         for (String json : inputs) {
             ArtifactPlanConfig artifactPlanConfig = ArtifactPlanConfig.fromJSON(json);
 
-            assertThat(artifactPlanConfig).isInstanceOf(SourceFileArtifactPlanConfig.class);
-            assertThat(((SourceFileArtifactPlanConfig) artifactPlanConfig).getSource()).isEqualTo("info.json");
+            assertThat(artifactPlanConfig).isInstanceOf(S3FileArtifactPlanConfig.class);
+            assertThat(((S3FileArtifactPlanConfig) artifactPlanConfig).getSource()).isEqualTo("info.json");
         }
     }
 

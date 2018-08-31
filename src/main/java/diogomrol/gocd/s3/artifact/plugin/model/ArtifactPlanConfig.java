@@ -22,6 +22,7 @@ import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 public abstract class ArtifactPlanConfig implements Validatable {
 
     abstract public String getSource();
+    abstract public String getDestination();
 
     @Override
     public String toString() {

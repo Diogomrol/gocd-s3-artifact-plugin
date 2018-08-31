@@ -18,7 +18,7 @@ package diogomrol.gocd.s3.artifact.plugin.executors;
 
 import diogomrol.gocd.s3.artifact.plugin.annotation.ConfigMetadata;
 import diogomrol.gocd.s3.artifact.plugin.annotation.MetadataHelper;
-import diogomrol.gocd.s3.artifact.plugin.model.SourceFileArtifactPlanConfig;
+import diogomrol.gocd.s3.artifact.plugin.model.S3FileArtifactPlanConfig;
 import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 import com.thoughtworks.go.plugin.api.response.DefaultGoPluginApiResponse;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
@@ -28,7 +28,7 @@ import java.util.List;
 public class GetPublishArtifactConfigMetadataExecutor implements RequestExecutor {
 
     public GoPluginApiResponse execute() {
-        final List<ConfigMetadata> metadata = MetadataHelper.getMetadata(SourceFileArtifactPlanConfig.class);
+        final List<ConfigMetadata> metadata = MetadataHelper.getMetadata(S3FileArtifactPlanConfig.class);
         return DefaultGoPluginApiResponse.success(Util.GSON.toJson(metadata));
     }
 }

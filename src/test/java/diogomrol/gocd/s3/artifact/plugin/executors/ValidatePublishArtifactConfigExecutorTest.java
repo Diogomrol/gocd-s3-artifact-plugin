@@ -40,26 +40,8 @@ public class ValidatePublishArtifactConfigExecutorTest {
     }
 
     @Test
-    public void shouldValidateRequestWithBuildFile() throws Exception {
-        String requestBody = new JSONObject().put("BuildFile", "").toString();
-        when(request.requestBody()).thenReturn(requestBody);
-
-        final GoPluginApiResponse response = new ValidatePublishArtifactConfigExecutor(request).execute();
-
-        String expectedJSON = "[" +
-                "  {" +
-                "    'key': 'Source'," +
-                "    'message': 'Source file must be specified.'" +
-                "  }" +
-                "]";
-        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.NON_EXTENSIBLE);
-    }
-
-    @Test
-    public void shouldValidateRequestWithImageAndTag() throws JSONException {
-        String requestBody = new JSONObject()
-                .put("Source", "")
-                .toString();
+    public void shouldValidateRequestWithSourceFile() throws Exception {
+        String requestBody = new JSONObject().put("Source", "").toString();
         when(request.requestBody()).thenReturn(requestBody);
 
         final GoPluginApiResponse response = new ValidatePublishArtifactConfigExecutor(request).execute();

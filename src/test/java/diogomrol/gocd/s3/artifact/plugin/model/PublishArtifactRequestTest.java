@@ -18,6 +18,8 @@ package diogomrol.gocd.s3.artifact.plugin.model;
 
 import org.junit.Test;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class PublishArtifactRequestTest {
@@ -53,6 +55,6 @@ public class PublishArtifactRequestTest {
                 .isEqualTo(new ArtifactStoreConfig("s3-url", "us-west-1", "aws-access-key", "aws-secret-access-key"));
 
         assertThat(publishArtifactRequest.getArtifactPlan())
-                .isEqualTo(new ArtifactPlan("installers", "s3-store", "alpine-build.json"));
+                .isEqualTo(new ArtifactPlan("installers", "s3-store", "alpine-build.json", Optional.empty()));
     }
 }

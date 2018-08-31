@@ -6,8 +6,8 @@ The S3 artifact plugin provides a way to publish and fetch artifacts to/from AWS
 
 To build the code base just execute:
 
-`./gradlew clean test assemble` on Unix based systems
-`gradlew.bat clean test assemble` on Windows
+- `./gradlew clean test assemble` on Unix based systems
+- `gradlew.bat clean test assemble` on Windows
 
 ## Getting started
 

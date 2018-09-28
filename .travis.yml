@@ -5,4 +5,5 @@ jdk:
   - oraclejdk8
 
 script:
-  - chmod +x ./gradlew build test assemble
+  - chmod +x gradlew
+  - ./gradlew build test assemble

@@ -39,21 +39,21 @@ public class GetArtifactStoreConfigMetadataExecutorTest {
                 "  {\n" +
                 "    \"key\": \"Region\",\n" +
                 "    \"metadata\": {\n" +
-                "      \"required\": true,\n" +
+                "      \"required\": false,\n" +
                 "      \"secure\": false\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"key\": \"AWSAccessKey\",\n" +
                 "    \"metadata\": {\n" +
-                "      \"required\": true,\n" +
+                "      \"required\": false,\n" +
                 "      \"secure\": false\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"key\": \"AWSSecretAccessKey\",\n" +
                 "    \"metadata\": {\n" +
-                "      \"required\": true,\n" +
+                "      \"required\": false,\n" +
                 "      \"secure\": true\n" +
                 "    }\n" +
                 "  }\n" +

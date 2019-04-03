@@ -48,18 +48,6 @@ public class ValidateArtifactStoreConfigExecutorExecutorTest {
                 "  {\n" +
                 "    \"key\": \"S3Bucket\",\n" +
                 "    \"message\": \"S3Bucket must not be blank.\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"key\": \"Region\",\n" +
-                "    \"message\": \"Region must not be blank.\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"key\": \"AWSAccessKey\",\n" +
-                "    \"message\": \"AWSAccessKey must not be blank.\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"key\": \"AWSSecretAccessKey\",\n" +
-                "    \"message\": \"AWSSecretAccessKey must not be blank.\"\n" +
                 "  }\n" +
                 "]";
         JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.NON_EXTENSIBLE);

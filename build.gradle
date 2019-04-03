@@ -92,7 +92,7 @@ dependencies {
   compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
   compile group: 'org.apache.maven.shared', name: 'maven-shared-utils', version: '3.2.1'
   compile group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.375'
+  compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.531'
 
   testCompile group: 'junit', name: 'junit', version: '4.12'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'

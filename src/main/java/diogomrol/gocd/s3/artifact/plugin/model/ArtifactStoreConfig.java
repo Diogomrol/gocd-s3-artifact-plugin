@@ -18,6 +18,7 @@ package diogomrol.gocd.s3.artifact.plugin.model;
 
 import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
 import diogomrol.gocd.s3.artifact.plugin.annotation.Validatable;
+import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationResult;
 import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -92,5 +93,10 @@ public class ArtifactStoreConfig implements Validatable {
 
     public static ArtifactStoreConfig fromJSON(String json) {
         return Util.GSON.fromJson(json, ArtifactStoreConfig.class);
+    }
+
+    @Override
+    public ValidationResult validate() {
+        return new ValidationResult(validateAllFieldsAsRequired());
     }
 }

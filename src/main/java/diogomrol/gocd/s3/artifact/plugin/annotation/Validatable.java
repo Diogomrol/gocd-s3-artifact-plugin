@@ -20,11 +20,16 @@ import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface Validatable {
+
+    ValidationResult validate();
+
     default String toJSON() {
         return Util.GSON.toJson(this);
     }
@@ -35,13 +40,14 @@ public interface Validatable {
     }
 
     default List<ValidationError> validateAllFieldsAsRequired() {
-        return toProperties().entrySet().stream()
-                .filter(entry -> StringUtils.isBlank(entry.getValue()) && !entry.getKey().equals("Destination"))
-                .map(entry -> new ValidationError(entry.getKey(), entry.getKey() + " must not be blank."))
-                .collect(Collectors.toList());
+        return validateAllFieldsAsRequired(Collections.emptySet());
     }
 
-    default ValidationResult validate() {
-        return new ValidationResult(validateAllFieldsAsRequired());
+    default List<ValidationError> validateAllFieldsAsRequired(Set<String> excluding) {
+        return toProperties().entrySet().stream()
+                .filter(entry -> !excluding.contains(entry.getKey()))
+                .filter(entry -> StringUtils.isBlank(entry.getValue()))
+                .map(entry -> new ValidationError(entry.getKey(), entry.getKey() + " must not be blank."))
+                .collect(Collectors.toList());
     }
 }

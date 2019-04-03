@@ -1,13 +1,18 @@
 package diogomrol.gocd.s3.artifact.plugin.model;
 
+import com.google.common.collect.ImmutableSet;
 import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationResult;
 
 import java.util.Objects;
 import java.util.Optional;
 
 public class S3FileArtifactPlanConfig extends ArtifactPlanConfig {
+
+    private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Destination");
+
     @Expose
     @SerializedName("Source")
     @FieldMetadata(key = "Source")
@@ -42,5 +47,10 @@ public class S3FileArtifactPlanConfig extends ArtifactPlanConfig {
     @Override
     public int hashCode() {
         return Objects.hash(source, destination);
+    }
+
+    @Override
+    public ValidationResult validate() {
+        return new ValidationResult(validateAllFieldsAsRequired(OPTIONAL_PROPERTIES));
     }
 }

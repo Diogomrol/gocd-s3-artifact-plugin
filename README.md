@@ -32,7 +32,7 @@ There are three levels of configuration needed in order for publishing and fetch
    - Specify the store id (an identifier you wish to give to this store)
    - Choose the Artifact plugin for S3
    - Specify the `S3 Bucket` and `S3 Region`
-   - Specify the `AWS Access Key Id` and `AWS Secret Access Key`
+   - Specify the `AWS Access Key Id` and `AWS Secret Access Key`. Leave blank to use the instance profile.
 
    ![](images/artifact_store.png)
 

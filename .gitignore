@@ -12,3 +12,7 @@ build/
 out
 docker-registry-artifact-plugin.iml
 src/main/resources-generated/
+
+/e2e/terraform/tf-out.json
+.terraform
+/docker-compose.yml.dojo

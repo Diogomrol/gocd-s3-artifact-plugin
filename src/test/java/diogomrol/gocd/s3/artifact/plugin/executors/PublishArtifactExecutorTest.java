@@ -73,17 +73,19 @@ public class PublishArtifactExecutorTest {
 
     @Captor ArgumentCaptor<PutObjectRequest> requestCaptor;
 
+    ArtifactStoreConfig storeConfig;
+
     @Before
     public void setUp() throws IOException, InterruptedException, SdkClientException {
         initMocks(this);
         agentWorkingDir = tmpFolder.newFolder("go-agent");
         when(s3ClientFactory.s3(any())).thenReturn(s3Client);
+        storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
     }
 
     @Test
     public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException, JSONException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.of("DestinationFolder"));
-        final ArtifactStoreConfig storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
         final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
 

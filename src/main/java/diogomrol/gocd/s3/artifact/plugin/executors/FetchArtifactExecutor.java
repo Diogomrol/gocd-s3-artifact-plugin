@@ -16,9 +16,12 @@
 
 package diogomrol.gocd.s3.artifact.plugin.executors;
 
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import diogomrol.gocd.s3.artifact.plugin.ConsoleLogger;
 import diogomrol.gocd.s3.artifact.plugin.S3ClientFactory;
 import diogomrol.gocd.s3.artifact.plugin.model.ArtifactStoreConfig;
+import diogomrol.gocd.s3.artifact.plugin.model.FetchArtifactConfig;
+import diogomrol.gocd.s3.artifact.plugin.model.FetchArtifactRequest;
 import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3Object;
@@ -44,8 +47,13 @@ public class FetchArtifactExecutor implements RequestExecutor {
         this(request, consoleLogger, S3ClientFactory.instance());
     }
 
-    FetchArtifactExecutor(GoPluginApiRequest request, ConsoleLogger consoleLogger, S3ClientFactory clientFactory) {
-        this.fetchArtifactRequest = FetchArtifactRequest.fromJSON(request.requestBody());
+    public FetchArtifactExecutor(GoPluginApiRequest request, ConsoleLogger consoleLogger, S3ClientFactory clientFactory)
+    {
+        this(FetchArtifactRequest.fromJSON(request.requestBody()), consoleLogger, clientFactory);
+    }
+
+    public FetchArtifactExecutor(FetchArtifactRequest fetchArtifactRequest, ConsoleLogger consoleLogger, S3ClientFactory clientFactory) {
+        this.fetchArtifactRequest = fetchArtifactRequest;
         this.consoleLogger = consoleLogger;
         this.clientFactory = clientFactory;
     }
@@ -53,31 +61,24 @@ public class FetchArtifactExecutor implements RequestExecutor {
     @Override
     public GoPluginApiResponse execute() {
         try {
-            final Map<String, String> artifactMap = fetchArtifactRequest.getMetadata();
-            validateMetadata(artifactMap);
+            final Map<String, String> artifactMetadata = fetchArtifactRequest.getMetadata();
+            validateMetadata(artifactMetadata);
+
+            FetchArtifactConfig fetchConfig = fetchArtifactRequest.getFetchArtifactConfig();
+            //TODO fetch dir fetchConfig.getSubDirectory()
 
             final String workingDir = fetchArtifactRequest.getAgentWorkingDir();
-            final String sourceFileToGet = artifactMap.get("Source");
+            final String sourceFileToGet = artifactMetadata.get("Source");
 
             consoleLogger.info(String.format("Retrieving file `%s` from S3 bucket `%s`.", sourceFileToGet, fetchArtifactRequest.getArtifactStoreConfig().getS3bucket()));
             LOG.info(String.format("Retrieving file `%s` from S3 bucket `%s`.", sourceFileToGet, fetchArtifactRequest.getArtifactStoreConfig().getS3bucket()));
 
             AmazonS3 s3 = clientFactory.s3(fetchArtifactRequest.getArtifactStoreConfig());
-            S3Object s3Object = s3.getObject(fetchArtifactRequest.getArtifactStoreConfig().getS3bucket(), sourceFileToGet);
-            S3ObjectInputStream s3InputStream = s3Object.getObjectContent();
-            InputStream fileReader = new BufferedInputStream(s3InputStream);
-            File outFile = new File(Paths.get(workingDir, sourceFileToGet).toString());
-            OutputStream writer = new BufferedOutputStream(new FileOutputStream(outFile));
-
-            int read_length = -1;
-
-            while ((read_length = fileReader.read()) != -1) {
-                writer.write(read_length);
-            }
-
-            writer.flush();
-            writer.close();
-            fileReader.close();
+            String bucketName = fetchArtifactRequest.getArtifactStoreConfig().getS3bucket();
+            String s3InbucketPath = sourceFileToGet;
+            File outFile = new File(Paths.get(workingDir, s3InbucketPath).toString());
+            GetObjectRequest getRequest = new GetObjectRequest(bucketName, s3InbucketPath);
+            s3.getObject(getRequest, outFile);
 
             consoleLogger.info(String.format("Source `%s` successfully pulled from S3 bucket `%s`.", sourceFileToGet, fetchArtifactRequest.getArtifactStoreConfig().getS3bucket()));
 
@@ -97,45 +98,6 @@ public class FetchArtifactExecutor implements RequestExecutor {
 
         if (!artifactMap.containsKey("Source")) {
             throw new RuntimeException(String.format("Cannot fetch the source file from S3: Invalid metadata received from the GoCD server. The artifact metadata must contain the key `%s`.", "Source"));
-        }
-    }
-
-    // TODO Diogomrorl: Maybe this can be moved to a separate file under model to keep coherence
-    protected static class FetchArtifactRequest {
-        @Expose
-        @SerializedName("store_configuration")
-        private ArtifactStoreConfig artifactStoreConfig;
-        @Expose
-        @SerializedName("artifact_metadata")
-        private Map<String, String> metadata;
-
-        @Expose
-        @SerializedName("agent_working_directory")
-        private String agentWorkingDir;
-
-        public FetchArtifactRequest() {
-        }
-
-        public FetchArtifactRequest(ArtifactStoreConfig artifactStoreConfig, Map<String, String> metadata, String agentWorkingDir) {
-            this.artifactStoreConfig = artifactStoreConfig;
-            this.metadata = metadata;
-            this.agentWorkingDir = agentWorkingDir;
-        }
-
-        public ArtifactStoreConfig getArtifactStoreConfig() {
-            return artifactStoreConfig;
-        }
-
-        public String getAgentWorkingDir() {
-            return agentWorkingDir;
-        }
-
-        public Map<String, String> getMetadata() {
-            return metadata;
-        }
-
-        public static FetchArtifactRequest fromJSON(String json) {
-            return Util.GSON.fromJson(json, FetchArtifactRequest.class);
         }
     }
 }

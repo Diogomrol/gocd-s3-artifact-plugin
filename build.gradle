@@ -1,5 +1,4 @@
 /*
- * Copyright 2018 Diogo Oliveira
  * Copyright 2017 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,152 +14,73 @@
  * limitations under the License.
  */
 
-plugins {
-  id 'co.riiid.gradle' version '0.4.2'
-}
-
 apply plugin: 'java'
-apply from: 'plugin-common.gradle'
+apply from: 'https://raw.githubusercontent.com/gocd/gradle-task-helpers/4d3374681565f5eb8b06e7389e069d4d997efefc/helper.gradle'
 
-def gitRevision = { ->
-  def hashStdOut = new ByteArrayOutputStream()
-  exec {
-    commandLine "git", "log", "-n", "1", "--format=%H"
-    standardOutput = hashStdOut
-  }
 
-  return hashStdOut.toString().trim()
+gocdPlugin {
+    id = 'cd.go.artifact.s3'
+    pluginVersion = '1.1.0'
+    goCdVersion = '18.7.0'
+    name = 'Artifact plugin for S3'
+    description = 'Plugin allows to store and fetch artifacts using Amazon S3'
+    vendorName = 'Diogo Oliveira'
+    vendorUrl = 'https://github.com/Diogomrol/s3-artifact-plugin'
+
+    githubRepo {
+        owner = System.getenv('GITHUB_USER') ?: 'bob'
+        repo = 's3-artifact-plugin'
+        token = System.getenv('GITHUB_TOKEN') ?: 'bad-token'
+    }
+
+    pluginProject = project
+
+    prerelease = !"No".equalsIgnoreCase(System.getenv('PRERELEASE'))
+    assetsToRelease = [project.tasks.findByName('jar')]
 }
-
-def releaseRevision = { ->
-  def hashStdOut = new ByteArrayOutputStream()
-  exec {
-    commandLine "git", "log", "--pretty=format:"
-    standardOutput = hashStdOut
-  }
-
-  return hashStdOut.size().toString()
-}
-
-def PLUGIN_VERSION = '1.0.0'
-def DIST_VERSION = releaseRevision()
-def GIT_REVISION = gitRevision()
-
-group = 'cd.go.artifact.s3'
-project.ext.pluginVersion = PLUGIN_VERSION
-rootProject.ext.distVersion = DIST_VERSION
-rootProject.ext.fullVersion = DIST_VERSION ? "${PLUGIN_VERSION}-${DIST_VERSION}" : PLUGIN_VERSION
-rootProject.ext.gitRevision = GIT_REVISION
-version = project.fullVersion
-
-
-project.ext.pluginDesc = [
-  id         : 'cd.go.artifact.s3',
-  version    : project.version,
-  goCdVersion: '18.7.0',
-  name       : 'Artifact plugin for S3',
-  description: 'Plugin allows to push/pull artifacts using Amazon S3',
-  vendorName : 'Diogo Oliveira',
-  vendorUrl  : 'https://github.com/Diogomrol/s3-artifact-plugin'
-]
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+version = gocdPlugin.fullVersion(project)
+
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 sourceSets {
-  test {
-    java {
-      compileClasspath += configurations.compileOnly
-      runtimeClasspath += configurations.compileOnly
+    test {
+        java {
+            compileClasspath += configurations.compileOnly
+            runtimeClasspath += configurations.compileOnly
+        }
     }
-  }
 
-  integrationTest {
-    resources.srcDirs += ['src/testdata']
-    compileClasspath += main.output + configurations.compileOnly
-    runtimeClasspath += main.output + configurations.compileOnly
-  }
+    integrationTest {
+        resources.srcDirs += ['src/testdata']
+        compileClasspath += main.output + configurations.compileOnly
+        runtimeClasspath += main.output + configurations.compileOnly
+    }
 }
 
 dependencies {
-  compileOnly group: 'cd.go.plugin', name: 'go-plugin-api', version: '18.6.0'
-  compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
-  compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
-  compile group: 'org.apache.maven.shared', name: 'maven-shared-utils', version: '3.2.1'
-  compile group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.375'
+    compileOnly group: 'cd.go.plugin', name: 'go-plugin-api', version: '18.6.0'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+    compile group: 'com.spotify', name: 'docker-client', version: '8.10.1'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.375'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
 
-  testCompile group: 'junit', name: 'junit', version: '4.12'
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.13.0'
-  testCompile group: 'org.skyscreamer', name: 'jsonassert', version: '1.3.0'
-  testCompile group: 'org.jsoup', name: 'jsoup', version: '1.10.2'
-  testCompile group: 'cd.go.plugin', name: 'go-plugin-api', version: '18.6.0'
-}
 
-processResources {
-  from("src/main/resource-templates") {
-    filesMatching('plugin.xml') {
-      expand project.pluginDesc
-    }
-
-    filesMatching('plugin.properties') {
-      expand project.pluginDesc
-    }
-  }
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.12.2'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.25.1'
+    testCompile group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.0'
+    testCompile group: 'org.jsoup', name: 'jsoup', version: '1.10.2'
+    testCompile group: 'cd.go.plugin', name: 'go-plugin-api', version: '18.6.0'
 }
 
 jar {
-  from(configurations.compile) {
-    into "lib/"
-  }
-
-//    from(sourceSets.main.java) {
-//        into "/"
-//    }
-}
-
-tasks.withType(Jar) { jarTask ->
-  preserveFileTimestamps = false
-  reproducibleFileOrder = true
-
-  ['MD5', 'SHA1', 'SHA-256'].each { algo ->
-    jarTask.outputs.files("${jarTask.archivePath}.${algo}")
-    jarTask.doLast {
-      ant.checksum file: jarTask.archivePath, format: 'MD5SUM', algorithm: algo
+    from(configurations.compile) {
+        into "lib/"
     }
-  }
-
-  manifest {
-    attributes(
-      'Go-Version': project.pluginDesc.goCdVersion,
-      'Plugin-Revision': project.pluginDesc.version,
-      'Implementation-Title': project.name,
-      'Implementation-Version': project.version,
-      'Source-Compatibility': project.sourceCompatibility,
-      'Target-Compatibility': project.targetCompatibility
-    )
-  }
-}
-
-github {
-  owner = System.getenv('GITHUB_USER') ?: 'bob'
-  repo = 'docker-registry-artifact-plugin'
-  token = System.getenv('GITHUB_TOKEN') ?: 'bad-token'
-  tagName = PLUGIN_VERSION
-  name = PLUGIN_VERSION
-  targetCommitish = project.gitRevision
-  body = """
-      # Version ${fullVersion}
-
-      See release notes at https://github.com/${github.owner}/${github.repo}/blob/master/CHANGELOG.md#${
-    github.tagName.replaceAll(/[^A-Za-z0-9]/, '')
-  }
-    """.stripIndent().trim()
-
-  assets = jar.outputs.files.files
 }

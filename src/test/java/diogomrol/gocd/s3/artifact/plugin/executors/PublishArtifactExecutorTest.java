@@ -16,6 +16,10 @@
 
 package diogomrol.gocd.s3.artifact.plugin.executors;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import diogomrol.gocd.s3.artifact.plugin.ConsoleLogger;
 import diogomrol.gocd.s3.artifact.plugin.S3ClientFactory;
 import diogomrol.gocd.s3.artifact.plugin.model.ArtifactPlan;
@@ -25,12 +29,19 @@ import diogomrol.gocd.s3.artifact.plugin.model.PublishArtifactRequest;
 import com.amazonaws.SdkClientException;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+
+import java.util.Map;
 import java.util.Optional;
 
 import java.io.File;
@@ -39,6 +50,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -56,26 +68,39 @@ public class PublishArtifactExecutorTest {
     private S3ClientFactory s3ClientFactory;
 
     private File agentWorkingDir;
+    @Mock
+    private AmazonS3 s3Client;
+
+    @Captor ArgumentCaptor<PutObjectRequest> requestCaptor;
 
     @Before
     public void setUp() throws IOException, InterruptedException, SdkClientException {
         initMocks(this);
         agentWorkingDir = tmpFolder.newFolder("go-agent");
-
+        when(s3ClientFactory.s3(any())).thenReturn(s3Client);
     }
 
     @Test
-    public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException {
+    public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException, JSONException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.of("DestinationFolder"));
         final ArtifactStoreConfig storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
         final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
 
         Path path = Paths.get(agentWorkingDir.getAbsolutePath(), "build.json");
-        Files.write(path, "{\"image\":\"localhost:5000/alpine\",\"tag\":\"3.6\"}".getBytes());
+        Files.write(path, "{\"content\":\"example artifact file\"}".getBytes());
 
         when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
 
         final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                    "\"Source\": \"build.json\"" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(1)).putObject(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
     }
 }

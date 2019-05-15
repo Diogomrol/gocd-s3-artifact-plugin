@@ -96,11 +96,13 @@ public class PublishArtifactExecutorTest {
         assertThat(response.responseCode()).isEqualTo(200);
         String expectedJSON = "{" +
                 "\"metadata\": {" +
-                    "\"Source\": \"build.json\"" +
+                    "\"Source\": \"build.json\"," +
+                    "\"Destination\": \"DestinationFolder\"" +
                 "}}";
         JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
 
         verify(s3Client, times(1)).putObject(requestCaptor.capture());
         assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
+        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test/DestinationFolder");
     }
 }

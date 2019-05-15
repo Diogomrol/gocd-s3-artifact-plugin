@@ -30,6 +30,7 @@ import diogomrol.gocd.s3.artifact.plugin.model.PublishArtifactRequest;
 import diogomrol.gocd.s3.artifact.plugin.model.PublishArtifactResponse;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static diogomrol.gocd.s3.artifact.plugin.S3ArtifactPlugin.LOG;
@@ -51,6 +52,10 @@ public class PublishArtifactExecutor implements RequestExecutor {
         publishArtifactResponse = new PublishArtifactResponse();
     }
 
+    String normalizePath(Path path) {
+        return path.toString().replace("\\", "/");
+    }
+
     @Override
     public GoPluginApiResponse execute() {
         ArtifactPlan artifactPlan = publishArtifactRequest.getArtifactPlan();
@@ -61,21 +66,22 @@ public class PublishArtifactExecutor implements RequestExecutor {
             final String destinationFolder = artifactPlan.getArtifactPlanConfig().getDestination();
             final String s3bucket = artifactStoreConfig.getS3bucket();
             final String workingDir = publishArtifactRequest.getAgentWorkingDir();
-            String s3bucketPath;
+            String s3InbucketPath;
 
             if(!destinationFolder.isEmpty()) {
-                s3bucketPath = Paths.get(s3bucket, destinationFolder).toString().replace("\\", "/");
+                s3InbucketPath = normalizePath(Paths.get(destinationFolder));
             }
             else {
-                s3bucketPath = Paths.get(s3bucket).toString().replace("\\", "/");
+                s3InbucketPath = "";
             }
-
+            String s3bucketPath = normalizePath(Paths.get(s3bucket, s3InbucketPath));
             PutObjectRequest request = new PutObjectRequest(s3bucketPath, sourceFile, new File(Paths.get(workingDir, sourceFile).toString()));
             ObjectMetadata metadata = new ObjectMetadata();
             request.setMetadata(metadata);
             s3.putObject(request);
 
             publishArtifactResponse.addMetadata("Source", sourceFile);
+            publishArtifactResponse.addMetadata("Destination", s3InbucketPath);
             consoleLogger.info(String.format("Source file `%s` successfully pushed to S3 bucket `%s`.", sourceFile, artifactStoreConfig.getS3bucket()));
 
             return DefaultGoPluginApiResponse.success(publishArtifactResponse.toJSON());

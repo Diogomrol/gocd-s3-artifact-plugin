@@ -72,7 +72,6 @@ public class PublishArtifactExecutor implements RequestExecutor {
 
             PutObjectRequest request = new PutObjectRequest(s3bucketPath, sourceFile, new File(Paths.get(workingDir, sourceFile).toString()));
             ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType("plain/text");
             request.setMetadata(metadata);
             s3.putObject(request);
 

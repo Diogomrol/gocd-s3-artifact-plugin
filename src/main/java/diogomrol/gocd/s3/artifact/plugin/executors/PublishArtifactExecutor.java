@@ -24,22 +24,22 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.DefaultGoPluginApiResponse;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
-import diogomrol.gocd.s3.artifact.plugin.model.ArtifactPlan;
-import diogomrol.gocd.s3.artifact.plugin.model.ArtifactStoreConfig;
-import diogomrol.gocd.s3.artifact.plugin.model.PublishArtifactRequest;
-import diogomrol.gocd.s3.artifact.plugin.model.PublishArtifactResponse;
+import diogomrol.gocd.s3.artifact.plugin.model.*;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static diogomrol.gocd.s3.artifact.plugin.S3ArtifactPlugin.LOG;
+import static diogomrol.gocd.s3.artifact.plugin.utils.Util.normalizePath;
 
 public class PublishArtifactExecutor implements RequestExecutor {
     private final PublishArtifactRequest publishArtifactRequest;
     private final PublishArtifactResponse publishArtifactResponse;
     private final ConsoleLogger consoleLogger;
     private final S3ClientFactory clientFactory;
+    private AntDirectoryScanner scanner;
 
     public PublishArtifactExecutor(GoPluginApiRequest request, ConsoleLogger consoleLogger) {
         this(request, consoleLogger, S3ClientFactory.instance());
@@ -49,11 +49,8 @@ public class PublishArtifactExecutor implements RequestExecutor {
         this.publishArtifactRequest = PublishArtifactRequest.fromJSON(request.requestBody());
         this.consoleLogger = consoleLogger;
         this.clientFactory = clientFactory;
+        scanner = new AntDirectoryScanner();
         publishArtifactResponse = new PublishArtifactResponse();
-    }
-
-    String normalizePath(Path path) {
-        return path.toString().replace("\\", "/");
     }
 
     @Override
@@ -62,27 +59,51 @@ public class PublishArtifactExecutor implements RequestExecutor {
         final ArtifactStoreConfig artifactStoreConfig = publishArtifactRequest.getArtifactStore().getArtifactStoreConfig();
         try {
             final AmazonS3 s3 = clientFactory.s3(artifactStoreConfig);
-            final String sourceFile = artifactPlan.getArtifactPlanConfig().getSource();
+            final String sourcePattern = artifactPlan.getArtifactPlanConfig().getSource();
             final String destinationFolder = artifactPlan.getArtifactPlanConfig().getDestination();
             final String s3bucket = artifactStoreConfig.getS3bucket();
             final String workingDir = publishArtifactRequest.getAgentWorkingDir();
             String s3InbucketPath;
-
             if(!destinationFolder.isEmpty()) {
                 s3InbucketPath = normalizePath(Paths.get(destinationFolder));
             }
             else {
                 s3InbucketPath = "";
             }
-            String s3bucketPath = normalizePath(Paths.get(s3bucket, s3InbucketPath));
-            PutObjectRequest request = new PutObjectRequest(s3bucketPath, sourceFile, new File(Paths.get(workingDir, sourceFile).toString()));
-            ObjectMetadata metadata = new ObjectMetadata();
-            request.setMetadata(metadata);
-            s3.putObject(request);
 
-            publishArtifactResponse.addMetadata("Source", sourceFile);
+            List<File> matchingFiles = scanner.getFilesMatchingPattern(new File(workingDir), sourcePattern);
+            if(matchingFiles.size() == 0) {
+                String noFilesMsg = String.format("No files are matching pattern: %s", sourcePattern);
+                consoleLogger.error(noFilesMsg);
+                LOG.warn(noFilesMsg);
+                //TODO: tomzo consider handling no artifacts failure in GoCD core
+                return DefaultGoPluginApiResponse.badRequest(noFilesMsg);
+            }
+            else if(matchingFiles.size() == 1) {
+                File sourceFile = matchingFiles.get(0);
+                String s3Key = normalizePath(Paths.get(s3InbucketPath, sourceFile.toPath().getFileName().toString()));
+                PutObjectRequest request = new PutObjectRequest(s3bucket, s3Key, new File(Paths.get(workingDir, sourceFile.toString()).toString()));
+                ObjectMetadata metadata = new ObjectMetadata();
+                request.setMetadata(metadata);
+                s3.putObject(request);
+                publishArtifactResponse.addMetadata("Source", sourceFile.toString());
+                publishArtifactResponse.addMetadata("IsFile", true);
+                consoleLogger.info(String.format("Source file `%s` successfully pushed to S3 bucket `%s`.", sourceFile, artifactStoreConfig.getS3bucket()));
+            }
+            else {
+                // upload many files
+                for(File sourceFile : matchingFiles) {
+                    String s3Key = normalizePath(Paths.get(s3InbucketPath, sourceFile.getPath()));
+                    PutObjectRequest request = new PutObjectRequest(s3bucket, s3Key, new File(Paths.get(workingDir, sourceFile.toString()).toString()));
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    request.setMetadata(metadata);
+                    s3.putObject(request);
+                    consoleLogger.info(String.format("Source file `%s` successfully pushed to S3 bucket `%s`.", sourceFile, artifactStoreConfig.getS3bucket()));
+                }
+                publishArtifactResponse.addMetadata("Source", sourcePattern);
+                publishArtifactResponse.addMetadata("IsFile", false);
+            }
             publishArtifactResponse.addMetadata("Destination", s3InbucketPath);
-            consoleLogger.info(String.format("Source file `%s` successfully pushed to S3 bucket `%s`.", sourceFile, artifactStoreConfig.getS3bucket()));
 
             return DefaultGoPluginApiResponse.success(publishArtifactResponse.toJSON());
         } catch (Exception e) {

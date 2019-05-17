@@ -15,7 +15,7 @@ public class FetchArtifactRequest {
     private ArtifactStoreConfig artifactStoreConfig;
     @Expose
     @SerializedName("artifact_metadata")
-    private Map<String, String> metadata;
+    private Map<String, Object> metadata;
 
     @Expose
     @SerializedName("agent_working_directory")
@@ -24,7 +24,7 @@ public class FetchArtifactRequest {
     public FetchArtifactRequest() {
     }
 
-    public FetchArtifactRequest(ArtifactStoreConfig artifactStoreConfig, Map<String, String> metadata, FetchArtifactConfig fetchArtifactConfig, String agentWorkingDir) {
+    public FetchArtifactRequest(ArtifactStoreConfig artifactStoreConfig, Map<String, Object> metadata, FetchArtifactConfig fetchArtifactConfig, String agentWorkingDir) {
         this.artifactStoreConfig = artifactStoreConfig;
         this.metadata = metadata;
         this.agentWorkingDir = agentWorkingDir;
@@ -39,7 +39,7 @@ public class FetchArtifactRequest {
         return agentWorkingDir;
     }
 
-    public Map<String, String> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 

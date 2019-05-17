@@ -41,6 +41,7 @@ import org.mockito.Mock;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -84,7 +85,7 @@ public class PublishArtifactExecutorTest {
     }
 
     @Test
-    public void shouldPublishArtifactUsingSourceFile() throws IOException, InterruptedException, JSONException {
+    public void shouldPublishArtifactUsingSourceFileWhenDestinationFolder() throws IOException, JSONException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.of("DestinationFolder"));
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
         final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
@@ -99,12 +100,170 @@ public class PublishArtifactExecutorTest {
         String expectedJSON = "{" +
                 "\"metadata\": {" +
                     "\"Source\": \"build.json\"," +
-                    "\"Destination\": \"DestinationFolder\"" +
+                    "\"Destination\": \"DestinationFolder\"," +
+                    "\"IsFile\": true" +
                 "}}";
         JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
 
         verify(s3Client, times(1)).putObject(requestCaptor.capture());
         assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
-        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test/DestinationFolder");
+        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test");
+        assertThat(requestCaptor.getValue().getKey()).isEqualTo("DestinationFolder/build.json");
+    }
+
+    @Test
+    public void shouldPublishArtifactUsingSourceFileWhenNoDestinationFolder() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.empty());
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        Path path = Paths.get(agentWorkingDir.getAbsolutePath(), "build.json");
+        Files.write(path, "{\"content\":\"example artifact file\"}".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"build.json\"," +
+                "\"Destination\": \"\"," +
+                "\"IsFile\": true" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(1)).putObject(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
+        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test");
+        assertThat(requestCaptor.getValue().getKey()).isEqualTo("build.json");
+    }
+
+    @Test
+    public void shouldPublishArtifactFilesMatchingPatternWhenNoDestinationFolder() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "*.json", Optional.empty());
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        Path buildJsonPath = Paths.get(agentWorkingDir.getAbsolutePath(), "build.json");
+        Files.write(buildJsonPath, "{\"content\":\"example build artifact file\"}".getBytes());
+        Path testJsonPath = Paths.get(agentWorkingDir.getAbsolutePath(), "test.json");
+        Files.write(testJsonPath, "{\"content\":\"example build artifact file\"}".getBytes());
+        Path binPath = Paths.get(agentWorkingDir.getAbsolutePath(), "test.bin");
+        Files.write(binPath, "example binary artifact".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"*.json\"," +
+                "\"Destination\": \"\"," +
+                "\"IsFile\": false" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(2)).putObject(requestCaptor.capture());
+        List<PutObjectRequest> allRequestsMade = requestCaptor.getAllValues();
+        assertThat(allRequestsMade)
+                .hasSize(2)
+                .extracting(PutObjectRequest::getBucketName)
+                .containsExactly("test", "test");
+        assertThat(allRequestsMade)
+                .hasSize(2)
+                .extracting(PutObjectRequest::getFile)
+                .contains(buildJsonPath.toFile(), testJsonPath.toFile());
+        assertThat(allRequestsMade)
+                .hasSize(2)
+                .extracting(PutObjectRequest::getKey)
+                .contains("build.json", "test.json");
+    }
+
+    @Test
+    public void shouldPublishArtifactFilesMatchingDirectoryPattern() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "bin", Optional.empty());
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        Path subDir = Paths.get(agentWorkingDir.getAbsolutePath(), "bin");
+        subDir.toFile().mkdir();
+
+        Path buildJsonPath = Paths.get(subDir.toAbsolutePath().toString(), "build.json");
+        Files.write(buildJsonPath, "{\"content\":\"example build artifact file\"}".getBytes());
+        Path testJsonPath = Paths.get(subDir.toAbsolutePath().toString(), "test.json");
+        Files.write(testJsonPath, "{\"content\":\"example build artifact file\"}".getBytes());
+        Path binPath = Paths.get(subDir.toAbsolutePath().toString(), "test.bin");
+        Files.write(binPath, "example binary artifact".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"bin\"," +
+                "\"Destination\": \"\"," +
+                "\"IsFile\": false" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(3)).putObject(requestCaptor.capture());
+        List<PutObjectRequest> allRequestsMade = requestCaptor.getAllValues();
+        assertThat(allRequestsMade)
+                .hasSize(3)
+                .extracting(PutObjectRequest::getBucketName)
+                .containsExactly("test", "test", "test");
+        assertThat(allRequestsMade)
+                .hasSize(3)
+                .extracting(PutObjectRequest::getFile)
+                .contains(buildJsonPath.toFile(), testJsonPath.toFile());
+        assertThat(allRequestsMade)
+                .hasSize(3)
+                .extracting(PutObjectRequest::getKey)
+                .contains("bin/build.json", "bin/test.json", "bin/test.bin");
+    }
+
+    @Test
+    public void shouldPublishArtifactFilesMatchingPatternWhenSourceFilesInSubdirectories() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "**/*.json", Optional.empty());
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        Path subDir = Paths.get(agentWorkingDir.getAbsolutePath(), "bin");
+        subDir.toFile().mkdir();
+
+        Path buildJsonPath = Paths.get(subDir.toAbsolutePath().toString(), "build.json");
+        Files.write(buildJsonPath, "{\"content\":\"example build artifact file\"}".getBytes());
+        Path testJsonPath = Paths.get(subDir.toAbsolutePath().toString(), "test.json");
+        Files.write(testJsonPath, "{\"content\":\"example build artifact file\"}".getBytes());
+        Path binPath = Paths.get(subDir.toAbsolutePath().toString(), "test.bin");
+        Files.write(binPath, "example binary artifact".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"**/*.json\"," +
+                "\"Destination\": \"\"," +
+                "\"IsFile\": false" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(2)).putObject(requestCaptor.capture());
+        List<PutObjectRequest> allRequestsMade = requestCaptor.getAllValues();
+        assertThat(allRequestsMade)
+                .hasSize(2)
+                .extracting(PutObjectRequest::getBucketName)
+                .containsExactly("test", "test");
+        assertThat(allRequestsMade)
+                .hasSize(2)
+                .extracting(PutObjectRequest::getFile)
+                .contains(buildJsonPath.toFile(), testJsonPath.toFile());
+        assertThat(allRequestsMade)
+                .hasSize(2)
+                .extracting(PutObjectRequest::getKey)
+                .contains("bin/build.json", "bin/test.json");
     }
 }

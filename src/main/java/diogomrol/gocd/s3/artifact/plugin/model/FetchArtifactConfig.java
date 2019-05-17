@@ -6,27 +6,38 @@ import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
 import diogomrol.gocd.s3.artifact.plugin.annotation.Validatable;
 import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationResult;
 import diogomrol.gocd.s3.artifact.plugin.utils.Util;
-import org.apache.commons.lang.StringUtils;
 
 public class FetchArtifactConfig implements Validatable {
     @Expose
-    @SerializedName("SubDirectory")
-    @FieldMetadata(key = "SubDirectory", required = false)
-    private String subDirectory;
+    @SerializedName("SubPath")
+    @FieldMetadata(key = "SubPath", required = false)
+    private String subPath;
+
+    @Expose
+    @SerializedName("IsFile")
+    @FieldMetadata(key = "IsFile", required = false)
+    private boolean isFile;
+
+    @Expose
+    @SerializedName("Destination")
+    @FieldMetadata(key = "Destination", required = false)
+    private String destination;
 
     public FetchArtifactConfig() {
     }
 
-    public FetchArtifactConfig(String subDir) {
-        this.subDirectory = subDir;
+    public FetchArtifactConfig(String subPath, String destination, boolean isFile) {
+        this.isFile = isFile;
+        this.destination = destination;
+        this.subPath = subPath;
     }
 
     public static FetchArtifactConfig fromJSON(String json) {
         return Util.GSON.fromJson(json, FetchArtifactConfig.class);
     }
 
-    public String getSubDirectory() {
-        return subDirectory;
+    public String getSubPath() {
+        return subPath;
     }
 
     @Override
@@ -34,5 +45,17 @@ public class FetchArtifactConfig implements Validatable {
         ValidationResult validationResult = new ValidationResult();
         //TODO: tomzo check if subdirectory is a valid path for S3 path
         return validationResult;
+    }
+
+    public boolean getIsFile() {
+        return isFile;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 }

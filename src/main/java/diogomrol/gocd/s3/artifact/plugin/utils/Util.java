@@ -28,9 +28,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class Util {
+    public static  String normalizePath(Path path) {
+        return path.toString().replace("\\", "/");
+    }
+
     public static final Gson GSON = new GsonBuilder().excludeFieldsWithoutExposeAnnotation()
             .serializeNulls()
             .registerTypeAdapter(ArtifactPlanConfig.class, new ArtifactPlanConfigTypeAdapter())

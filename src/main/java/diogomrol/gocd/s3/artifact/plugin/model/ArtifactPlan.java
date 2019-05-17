@@ -36,10 +36,10 @@ public class ArtifactPlan {
     public ArtifactPlan() {
     }
 
-    public ArtifactPlan(String id, String storeId, String sourceFile, Optional<String> destination) {
+    public ArtifactPlan(String id, String storeId, String sourcePattern, Optional<String> destination) {
         this.id = id;
         this.storeId = storeId;
-        this.artifactPlanConfig = new S3FileArtifactPlanConfig(sourceFile, destination);
+        this.artifactPlanConfig = new S3FileArtifactPlanConfig(sourcePattern, destination);
     }
 
     public String getId() {

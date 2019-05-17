@@ -36,32 +36,236 @@ There are three levels of configuration needed in order for publishing and fetch
 
    ![](images/artifact_store.png)
 
+See [specification](#specification) lower for more details.
+
 #### Publish artifact config
 
+Options:
+ * `Source` - ant-like pattern for matching files to upload to S3. If directory is matched, all files of that directory are also uploaded.
+ * `Destination` - a prefix in S3 bucket at which files will be uploaded.
+
+Setup through Web UI:
 1. Navigate to the `Artifacts` tab under Stage > Job
 2. Choose artifact type `External`
    - Specify the `artifact id`.
    - Specify the `store id` of an existing artifact store
 3. Configure the build specific artifact details.
-   - Specify the `Source` file
+   - Specify the `Source` files pattern
    - Optionally specify the `Destination`, which is a folder path to where artifacts will be uploaded in your S3 bucket. If left empty, the file will be uploaded to the root of the S3 bucket you have specified.
 
    ![](images/build_and_publish_image_artifacts.png)
 
+See [specification](#specification) lower for more details.
+
 #### Fetch artifact config
 
-To pull an image from an upstream pipeline or stage, the following information is required:
+Options:
+ * `IsFile` - determines if we are fetching just a single file.
+ * `SubPath` - When fetching many files, a common prefix of objects in S3 bucket. When fetching single file: this can be a path in S3. It is possible to skip the path if upstream job has uploaded exactly 1 file. The **SubPath** should not include the `Destination` part of [publish artifact config](#publish-artifact-config), see [specification](#specification) lower for more details.
+ * `Destination` - a local subdirectory into which files will be fetched.
 
-1. Specify a `Pipeline Dependency` material if you have an upstream pipeline you want to pull the docker image.
+
+Setup through Web UI:
+1. Specify a `Pipeline Dependency` material if you have an upstream pipeline with artifacts to fetch.
 2. Navigate to `Tasks` tab under Stage > Job
 3. Add a `Fetch Artifact` task
    - Choose artifact origin type `External`
    - Specify the pipeline, stage and job name.
    - Specify the artifact id of the external artifact that belongs to the upstream job
+   - Optionally specify `SubPath` to fetch only files matching a prefix.
+   - Optionally specify `Destination` to fetch files to a custom directory.
+   - Optionally select `Source is a single file`.
+
+   ![](images/gocd_s3_fetch_options.png)
+
+See [specification](#specification) lower for more details.
+
+# Specification
+
+Plugin partially mimics behaviour of the original GoCD artifact store.
+
+## How the plugin works
+
+#### Upload
+
+ - on GoCD agent, files are matched using the `Source` configuration value.
+ - agent uploads each file to AWS S3 Bucket, at `Destination` prefix.
+ - on GoCD server a small JSON file is created in `pluggable-artifact-metadata`, (unique per job run):
+```json
+{
+  "Source" : "**/*.dll",
+  "Destination" : "my/prefix",
+  "IsFile" : false
+}
+```
+
+ * `Source` is a pattern which user has provided in the artifact publish config. Except when there was exactly one match, then source is a path from which file was uploaded. E.g. in above example it could be `bin/my.dll` if there was just one `.dll` file in any directory.
+ * `Destination` is user specified prefix at which all uploaded artifacts should land. E.g. if a `bin/my.dll` was matched, then plugin uploaded file to `my/prefix/bin/my.dll`
+ * `IsFile` is set to `true` only when plugin found exactly one file matching the pattern.
+
+#### Fetch
+
+ - GoCD agent fetches the JSON file from server in `pluggable-artifact-metadata`
+ - GoCD agent **always** adds a prefix before each S3 object download with `Destination` which was earlier saved in the JSON file.
+
+If **fetch is a single file** and **upstream upload was a single file** (pattern matching only 1 file):
+Then GoCD agent will use `Source` field from the JSON to determine the S3 path to use for download.
+
+If **fetch is a single file** but **upstream upload was uploaded multiple files**:
+Then user must specify `SubPath` in the fetch configuration.
+GoCD agent will use `SubPath` to determine the S3 path to use for download.
+
+If **fetch is of multiple files**:
+Then there are no required options.
+GoCD agent will use a [List S3 Objects](https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html) request to determine which objects to download. If `SubPath` is specified, then only objects starting with a `SubPath` will be downloaded.
+If no files match, then fetch task fails.
+
+## Examples
+
+Examples below should suffice to understand the expected behavior.
+
+### Single file upload
+
+**Scenario 1:**
+ * agent working directory has `./build.json` file.
+ * configured `Source` pattern is `build.json`
+
+**Result:**
+On GoCD server:
+```json
+{
+"Source" : "build.json",
+"Destination" : "",
+"IsFile" : true
+}
+```
+On AWS bucket `/build.json`.
+
+**Scenario 2:**
+ * agent working directory has `./bin/build.json` file.
+ * configured `Source` pattern is `*/build.json`
+
+**Result:**
+ On GoCD server:
+```json
+{
+  "Source" : "bin/build.json",
+  "Destination" : "",
+  "IsFile" : true
+}
+```
+On AWS bucket `/bin/build.json`.
+
+**Scenario 3:**
+  * agent working directory has `./bin/build.json` file.
+  * configured `Source` pattern is `*/build.json`
+  * configured `Destination` prefix is `x/y`
+
+**Result:**
+On GoCD server:
+```json
+{
+  "Source" : "bin/build.json",
+  "Destination" : "x/y",
+  "IsFile" : true
+}
+```
+On AWS bucket `x/y/bin/build.json`.
+
+### Many files upload
+
+**Scenario 1:**
+ * agent working directory has `./bin/build.json` and `./bin/a.bin` files.
+ * configured `Source` pattern is `bin`
+
+**Result:**
+On GoCD server:
+```json
+{
+  "Source" : "bin",
+  "Destination" : "",
+  "IsFile" : false
+}
+```
+On AWS bucket: `/bin/build.json` and `/bin/a.bin`.
+
+**Scenario 2:**
+ * agent working directory has `./bin/build.json` and `./bin/a.bin` files.
+ * configured `Source` pattern is `bin`
+ * configured `Destination` prefix is `x/y`
+
+**Result:**
+On GoCD server:
+```json
+{
+  "Source" : "bin",
+  "Destination" : "x/y",
+  "IsFile" : false
+}
+```
+On AWS bucket: `/x/y/bin/build.json` and `/x/y/bin/a.bin`.
+
+### Fetch single file
+
+**Scenario 1:**
+ * no options configured in fetch task
+ * upstream upload was a single file upload.
+
+On GoCD we have
+```json
+{
+"Source" : "bin/build.json",
+"Destination" : "",
+"IsFile" : true
+}
+```
+On AWS bucket `/bin/build.json`
+
+**Result:**
+Agent will fetch `bin/build.json` to `./build.json`.
+
+
+**Scenario 2:**
+ * configuration in fetch task - `Destination: z`
+ * upstream upload was a single file upload.
+
+On GoCD we have
+```json
+{
+  "Source" : "bin/build.json",
+  "Destination" : "",
+  "IsFile" : true
+}
+```
+On AWS bucket `/bin/build.json`.
+Agent will fetch `bin/build.json` to `z/build.json`.
+
+### Fetch directory (prefix)
+
+**Scenario 1:**
+ * no options configured in fetch task
+
+On GoCD we have:
+```json
+{
+  "Source" : "bin",
+  "Destination" : "x/y",
+  "IsFile" : false
+}
+```
+On AWS bucket:
+ - `/x/y/bin/build.json`
+ - `/x/y/bin/a.bin`
+ - `/abc/ignored`
+
+Agent will fetch
+ - `x/y/bin/build.json` to `./bin/build.json`
+ - `x/y/bin/a.bin` to `./bin/a.bin`
 
 ## License
 
 ```plain
+Copyright 2019 Tomasz Sętkowski
 Copyright 2018 Diogomrol
 Copyright 2018 ThoughtWorks, Inc.
 

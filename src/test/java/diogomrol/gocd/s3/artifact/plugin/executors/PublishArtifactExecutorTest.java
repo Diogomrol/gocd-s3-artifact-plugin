@@ -41,6 +41,7 @@ import org.mockito.Mock;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,11 +78,74 @@ public class PublishArtifactExecutorTest {
     ArtifactStoreConfig storeConfig;
 
     @Before
-    public void setUp() throws IOException, InterruptedException, SdkClientException {
+    public void setUp() throws IOException, SdkClientException {
         initMocks(this);
         agentWorkingDir = tmpFolder.newFolder("go-agent");
         when(s3ClientFactory.s3(any())).thenReturn(s3Client);
         storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
+    }
+
+    @Test
+    public void shouldExpandGoArtifactLocatorSpecialVariableInDestinationFolder() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.of("${GO_ARTIFACT_LOCATOR}/x"));
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+        Map<String, String> environmentVariables = new HashMap<>();
+        environmentVariables.put("GO_PIPELINE_NAME", "test");
+        environmentVariables.put("GO_PIPELINE_COUNTER", "112");
+        environmentVariables.put("GO_STAGE_NAME", "build");
+        environmentVariables.put("GO_STAGE_COUNTER", "21");
+        environmentVariables.put("GO_JOB_NAME", "job");
+        publishArtifactRequest.setEnvironmentVariables(environmentVariables);
+
+        Path path = Paths.get(agentWorkingDir.getAbsolutePath(), "build.json");
+        Files.write(path, "{\"content\":\"example artifact file\"}".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"build.json\"," +
+                "\"Destination\": \"test/112/build/21/job/x\"," +
+                "\"IsFile\": true" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(1)).putObject(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
+        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test");
+        assertThat(requestCaptor.getValue().getKey()).isEqualTo("test/112/build/21/job/x/build.json");
+    }
+
+    @Test
+    public void shouldExpandEnvironmentVariablesInDestinationFolder() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.of("${GO_PIPELINE_NAME}/x"));
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+        publishArtifactRequest.setEnvironmentVariables(new HashMap<>());
+        publishArtifactRequest.getEnvironmentVariables().put("GO_PIPELINE_NAME", "pipe");
+
+        Path path = Paths.get(agentWorkingDir.getAbsolutePath(), "build.json");
+        Files.write(path, "{\"content\":\"example artifact file\"}".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"build.json\"," +
+                "\"Destination\": \"pipe/x\"," +
+                "\"IsFile\": true" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(1)).putObject(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
+        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test");
+        assertThat(requestCaptor.getValue().getKey()).isEqualTo("pipe/x/build.json");
     }
 
     @Test

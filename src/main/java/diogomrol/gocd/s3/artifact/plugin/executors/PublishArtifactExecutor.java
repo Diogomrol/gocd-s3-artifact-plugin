@@ -60,7 +60,9 @@ public class PublishArtifactExecutor implements RequestExecutor {
         try {
             final AmazonS3 s3 = clientFactory.s3(artifactStoreConfig);
             final String sourcePattern = artifactPlan.getArtifactPlanConfig().getSource();
-            final String destinationFolder = artifactPlan.getArtifactPlanConfig().getDestination();
+            String destinationFolder = artifactPlan.getArtifactPlanConfig().getDestination();
+            EnvironmentVariableResolver envResolver = new EnvironmentVariableResolver(destinationFolder, "Destination");
+            destinationFolder = envResolver.resolve(publishArtifactRequest.getEnvironmentVariables());
             final String s3bucket = artifactStoreConfig.getS3bucket();
             final String workingDir = publishArtifactRequest.getAgentWorkingDir();
             String s3InbucketPath;

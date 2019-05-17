@@ -120,6 +120,17 @@ Then there are no required options.
 GoCD agent will use a [List S3 Objects](https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html) request to determine which objects to download. If `SubPath` is specified, then only objects starting with a `SubPath` will be downloaded.
 If no files match, then fetch task fails.
 
+## Expanding environment variables
+
+The `Destination` of the publish artifact config supports expanding environment variables available within the GoCD job context.
+That means that you can specify destination S3 prefix using e.g. `${GO_PIPELINE_NAME}/my/path/${GO_PIPELINE_COUNTER}`.
+
+One of the most important uses of this feature is when destination directory is specified by `${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/${GO_STAGE_NAME}/${GO_STAGE_COUNTER}/${GO_JOB_NAME}`.
+Such destination is unique for each build. It is the same tree structure which original GoCD artifact store uses.
+This plugin provides a convenience `${GO_ARTIFACT_LOCATOR}` which evaluates to above expression.
+
+If you decide to use `${GO_ARTIFACT_LOCATOR}` as destination prefix in all your GoCD jobs, then S3 bucket will have the same artifact "directory" structure as original GoCD would.
+
 ## Examples
 
 Examples below should suffice to understand the expected behavior.

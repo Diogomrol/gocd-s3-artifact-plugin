@@ -8,6 +8,7 @@ provider "aws" {
   region = "eu-west-1"
 }
 
+# For local testing outside of kudulab, this should be commented out
 terraform {
   backend "s3" {
     bucket = "kudu-terraform-infra"
@@ -19,6 +20,7 @@ terraform {
 resource "aws_s3_bucket" "gocd_artifact_test" {
   bucket = "gocd-s3-artifact-test-${var.suffix}"
   acl    = "private"
+  force_destroy = true
 
   tags = {
     Name        = "GoCD S3 plugin test bucket ${var.suffix}"
@@ -29,6 +31,7 @@ resource "aws_s3_bucket" "gocd_artifact_test" {
 resource "aws_iam_user" "test_user" {
   name = "gocd-s3-artifact-test-${var.suffix}"
   path = "/"
+  permissions_boundary = "arn:aws:iam::976184668068:policy/gocd-s3-artifact-boundry"
   tags = {
     Name        = "GoCD S3 plugin test user ${var.suffix}"
     createdBy   = "gocd-s3-artifact-plugin"

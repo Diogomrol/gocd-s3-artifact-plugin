@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
 import diogomrol.gocd.s3.artifact.plugin.ConsoleLogger;
+import diogomrol.gocd.s3.artifact.plugin.IntegrationTests;
 import diogomrol.gocd.s3.artifact.plugin.S3ClientFactory;
 import diogomrol.gocd.s3.artifact.plugin.model.ArtifactPlan;
 import diogomrol.gocd.s3.artifact.plugin.model.ArtifactStore;
@@ -18,6 +19,7 @@ import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+@Category(IntegrationTests.class)
 public class PublishArtifactExecutorIntegrationTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();

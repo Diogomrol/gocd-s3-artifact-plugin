@@ -2,13 +2,6 @@
 
 The S3 artifact plugin provides a way to publish and fetch artifacts to/from AWS S3.
 
-## Building the code base
-
-To build the code base just execute:
-
-- `./gradlew clean test assemble` on Unix based systems
-- `gradlew.bat clean test assemble` on Windows
-
 ## Getting started
 
 ### Requirements
@@ -272,6 +265,43 @@ On AWS bucket:
 Agent will fetch
  - `x/y/bin/build.json` to `./bin/build.json`
  - `x/y/bin/a.bin` to `./bin/a.bin`
+
+# Development
+
+## Building the code base
+
+If you have local java SDK, then to build the code base just execute:
+
+- `./gradlew clean test assemble` on Unix based systems
+- `gradlew.bat clean test assemble` on Windows
+
+## Building with docker and dojo
+
+You don't need to setup java on your host, if you are fine with using docker and [Dojo](https://github.com/ai-traders/dojo).
+
+Assuming you already have a working docker, you can install dojo with:
+```
+DOJO_VERSION=0.5.0
+wget -O dojo https://github.com/ai-traders/dojo/releases/download/${DOJO_VERSION}/dojo_linux_amd64
+sudo mv dojo /usr/local/bin
+sudo chmod +x /usr/local/bin/dojo
+```
+Then enter a docker container with java pre-installed, by running following command at the root of the project:
+```
+dojo
+```
+You can also build the plugin in single line:
+```sh
+dojo "./gradlew clean test assemble"
+```
+
+Running integration tests:
+ * Requires access to S3 bucket. This can be provisioned by terraform in `e2e/terraform`. Run with `./tasks tf_apply create`.
+ * Terraform creates S3 bucket and a user with limited access, credentials are in `e2e/terraform/tf-out.json`.
+ * To run all tests including integration:
+```
+./tasks build_test
+```
 
 ## License
 

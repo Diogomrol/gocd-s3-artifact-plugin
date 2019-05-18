@@ -55,13 +55,28 @@ sourceSets {
             runtimeClasspath += configurations.compileOnly
         }
     }
+}
 
-    integrationTest {
-        resources.srcDirs += ['src/testdata']
-        compileClasspath += main.output + configurations.compileOnly
-        runtimeClasspath += main.output + configurations.compileOnly
+test {
+    useJUnit {
+        excludeCategories 'diogomrol.gocd.s3.artifact.plugin.IntegrationTests'
     }
 }
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter test
+
+    useJUnit {
+        includeCategories 'diogomrol.gocd.s3.artifact.plugin.IntegrationTests'
+    }
+}
+
+check.dependsOn integrationTest
 
 dependencies {
     compileOnly group: 'cd.go.plugin', name: 'go-plugin-api', version: '18.6.0'

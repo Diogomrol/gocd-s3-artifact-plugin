@@ -9,11 +9,13 @@ import com.google.gson.reflect.TypeToken;
 import com.thoughtworks.go.plugin.api.request.GoPluginApiRequest;
 import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
 import diogomrol.gocd.s3.artifact.plugin.ConsoleLogger;
+import diogomrol.gocd.s3.artifact.plugin.IntegrationTests;
 import diogomrol.gocd.s3.artifact.plugin.S3ClientFactory;
 import diogomrol.gocd.s3.artifact.plugin.model.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 
@@ -31,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+@Category(IntegrationTests.class)
 public class PublishAndFetchIntegrationTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

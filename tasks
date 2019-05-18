@@ -1,0 +1,122 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+RELEASER_VERSION="2.1.0"
+SECRET_OPS_VERSION="0.6.2"
+
+SECRET_OPS_FILE="ops/secret-ops"
+SECRET_OPS_TAR_FILE="ops/secret-ops-${SECRET_OPS_VERSION}.tar.gz"
+RELEASER_FILE="ops/releaser-${RELEASER_VERSION}"
+
+VAULT_ADDR="https://vault.kudulab.io:8200"
+
+mkdir -p ops
+if [[ ! -f $RELEASER_FILE ]];then
+  wget --quiet -O $RELEASER_FILE https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser
+fi
+source $RELEASER_FILE
+if [[ ! -f $SECRET_OPS_TAR_FILE ]];then
+  wget --quiet -O $SECRET_OPS_TAR_FILE https://github.com/kudulab/secret-ops/releases/download/${SECRET_OPS_VERSION}/secret-ops.tar.gz
+  tar -xf $SECRET_OPS_TAR_FILE -C ops
+fi
+source $SECRET_OPS_FILE
+
+GOCD_ENDPOINT="http://gocd:8153/go"
+KUDU_SERVICE=gocd-s3-artifact-plugin-test
+
+function tf_ops {
+  operation=$1
+
+  cd e2e/terraform/
+  terraform init -backend-config key=kudu-${KUDU_SERVICE}/terraform.tfstate
+  terraform get # modules
+  if [[ "${operation}" == "create" ]]; then
+    terraform plan -out="kudu_deployment.tfplan"
+  elif [[ "${operation}" == "destroy" ]]; then
+    terraform plan -out="kudu_deployment.tfplan" -destroy
+  else
+    echo "Unknown operation: ${operation}"
+    exit 1
+  fi
+  terraform apply kudu_deployment.tfplan
+
+  terraform output -json > tf-out.json
+}
+
+function source_tf {
+  AWS_BUCKET=$(cat e2e/terraform/tf-out.json | jq -r '.s3_bucket.value')
+  AWS_ACCESS_KEY=$(cat e2e/terraform/tf-out.json | jq -r '.s3_key_id.value')
+  AWS_SECRET_ACCESS_KEY=$(cat e2e/terraform/tf-out.json | jq -r '.s3_key.value')
+  export AWS_BUCKET
+  export AWS_ACCESS_KEY
+  export AWS_SECRET_ACCESS_KEY
+}
+
+command="$1"
+case "${command}" in
+  _tf_apply)
+      tf_ops "$2"
+      ;;
+  tf_apply)
+      set +u
+      if [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+        echo "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY must be set."
+        if [[ -n "${VAULT_TOKEN}" ]]; then
+          echo "Trying to get secrets from vault"
+          AWS_ACCESS_KEY_ID=$(vault read -field=key_id secret/gocd-s3-plugin/aws)
+          AWS_SECRET_ACCESS_KEY=$(vault read -field=secret_key secret/gocd-s3-plugin/aws)
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+        else
+          exit 1
+        fi
+      fi
+      dojo -c e2e/terraform/Dojofile "./tasks _tf_apply $2"
+      ;;
+  wait_online)
+    sleep 10
+    for i in {1..200}; do
+      HTTP_RESPONSE=$(curl --silent --write-out "HTTPSTATUS:%{http_code}" \
+        "${GOCD_ENDPOINT}/api/v1/health" --insecure \
+        -H 'Accept: application/vnd.go.cd.v1+json' \
+        -H 'Content-Type: application/json' \
+        )
+      HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+      if [ ! $HTTP_STATUS -eq 200  ]; then
+        echo "GoCD is not up yet" >&2
+        sleep 1
+        continue
+      fi
+      HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
+      echo $HTTP_BODY
+      exit 0
+    done
+    ;;
+  _setup_gocd)
+    ./tasks wait_online
+    bash
+    ;;
+  setup_gocd)
+    export GOCDCLI_SERVER_URL=$GOCD_ENDPOINT
+    dojo "./tasks _setup_gocd"
+    ;;
+  _build_test)
+    ./gradlew check assemble
+    ;;
+  build_test)
+    source_tf
+    dojo "./tasks _build_test"
+    ;;
+  generate_vault_token)
+    vault_token=$(vault token create -orphan -ttl=48h -policy=gocd-s3-plugin -field token -metadata gocd_renew=true)
+    secured_token_gocd=$(secret_ops::encrypt_with_gocd_top "${vault_token}")
+    echo "Generated token: ${vault_token} and encrypted by GoCD server"
+    secret_ops::insert_vault_token_gocd_yaml "${secured_token_gocd}"
+    ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac
+set +e

@@ -16,3 +16,5 @@ src/main/resources-generated/
 /e2e/terraform/tf-out.json
 .terraform
 /docker-compose.yml.dojo
+/e2e/terraform/kudu_deployment.tfplan
+/ops/

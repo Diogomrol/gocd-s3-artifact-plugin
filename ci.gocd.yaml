@@ -1,0 +1,36 @@
+format_version: 3
+pipelines:
+  "gocd-s3-artifact-plugin":
+    group: gocd
+    label_template: "${git[:8]}"
+    locking: off
+    materials:
+      git:
+        type: configrepo
+    secure_variables:
+      VAULT_TOKEN: "AES:tkXiF3FyAiEU1al4iUusPg==:B+bIFfoYlX8w7VADLZIWVnx76LI/goIrOVN78gsP6BI="
+    stages:
+      - build:
+          clean_workspace: true
+          elastic_profile_id: w.c2.m2048.e10
+          artifacts:
+           - build:
+               source: build/libs/*.jar*
+               destination: build/libs
+          tasks:
+           - exec:
+               command: bash
+               arguments:
+                - -c
+                - ./tasks tf_apply create
+           - exec:
+               command: bash
+               arguments:
+                - -c
+                - ./tasks build_test
+           - exec:
+               run_if: any
+               command: bash
+               arguments:
+                - -c
+                - ./tasks tf_apply destroy

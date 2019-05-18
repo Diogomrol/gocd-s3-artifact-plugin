@@ -79,6 +79,7 @@ output "s3_key_id" {
 }
 output "s3_key" {
   value = "${aws_iam_access_key.test_user.secret}"
+  sensitive = true
 }
 output "s3_bucket" {
   value = "${aws_s3_bucket.gocd_artifact_test.bucket}"

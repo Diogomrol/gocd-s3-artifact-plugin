@@ -6,7 +6,36 @@ The S3 artifact plugin provides a way to publish and fetch artifacts to/from AWS
 
 ### Requirements
 
-- GoCD Server 18.7+
+ - GoCD Server 18.7+
+ - AWS account with access to S3 bucket
+
+Following IAM policy should suffice to publish and fetch artifacts:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+     "Resource": [
+        "arn:aws:s3:::my-artifacts-bucket"
+      ]
+    },
+    {
+      "Action": [
+        "s3:GetObject",
+        "s3:HeadBucket",
+        "s3:PutObject"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::my-artifacts-bucket/*"
+    }
+  ]
+}
+```
+Note: Action `s3:DeleteObject` is not needed, plugin does not delete any objects.
 
 ### Plugin Installation
 

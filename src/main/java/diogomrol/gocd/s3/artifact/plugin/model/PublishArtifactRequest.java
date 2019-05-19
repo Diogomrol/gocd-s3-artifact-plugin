@@ -64,6 +64,10 @@ public class PublishArtifactRequest {
         return environmentVariables;
     }
 
+    public void setEnvironmentVariables(Map<String, String> environmentVariables) {
+        this.environmentVariables = environmentVariables;
+    }
+
     public static PublishArtifactRequest fromJSON(String json) {
         return Util.GSON.fromJson(json, PublishArtifactRequest.class);
     }

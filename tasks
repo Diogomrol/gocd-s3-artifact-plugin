@@ -156,7 +156,8 @@ case "${command}" in
       --name $VERSION \
       --pre-release
 
-    for file in build/libs/s3-artifact-plugin-*.jar*; do
+    cd build/libs/
+    for file in s3-artifact-plugin-*.jar*; do
       $GHRELEASE_BIN upload \
         --user tomzo \
         --repo gocd-s3-artifact-plugin \

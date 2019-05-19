@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/Diogomrol/gocd-s3-artifact-plugin.svg?branch=master)](https://travis-ci.com/Diogomrol/gocd-s3-artifact-plugin)
 # GoCD S3 Artifact Plugin
 
 The S3 artifact plugin provides a way to publish and fetch artifacts to/from AWS S3.

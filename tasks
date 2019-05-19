@@ -150,7 +150,7 @@ case "${command}" in
     fi
 
     $GHRELEASE_BIN release \
-      --user tomzo \
+      --user Diogomrol \
       --repo gocd-s3-artifact-plugin \
       --tag $VERSION \
       --name $VERSION \
@@ -159,7 +159,7 @@ case "${command}" in
     cd build/libs/
     for file in s3-artifact-plugin-*.jar*; do
       $GHRELEASE_BIN upload \
-        --user tomzo \
+        --user Diogomrol \
         --repo gocd-s3-artifact-plugin \
         --tag $VERSION \
         --name "$file" \

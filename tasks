@@ -102,7 +102,7 @@ case "${command}" in
     dojo "./tasks _setup_gocd"
     ;;
   _build_test)
-    ./gradlew check assemble
+    gradle check assemble
     ;;
   build_test)
     source_tf

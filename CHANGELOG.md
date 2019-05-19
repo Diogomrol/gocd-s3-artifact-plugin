@@ -5,6 +5,7 @@ Features and improvements:
  - Implemented pattern maching and directory uploads
  - Implemented fetch of multiple files or directories
  - Implemented environment variable expansion in the destination prefix of the S3 bucket
+ - Added eu-north-1 region
 
 Build system and release cycle:
  - Updated build system to use gradle 5.x

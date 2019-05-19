@@ -332,6 +332,18 @@ Running integration tests:
 ./tasks build_test
 ```
 
+## Versioning
+
+We use semantic versioning.
+
+If you are submitting a new feature then please run a major version bump by
+```
+./tasks.sh set_version 0.X.0
+```
+
+If you are submitting a fix, then do not change any versions as patch bump is made right after each release.
+
+
 ## License
 
 ```plain

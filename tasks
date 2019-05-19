@@ -108,6 +108,63 @@ case "${command}" in
     source_tf
     dojo "./tasks _build_test"
     ;;
+  set_version)
+    set +u
+    releaser::bump_changelog_version "$2" "$3"
+    next_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
+    releaser::set_version_in_file "pluginVersion = " "build.gradle" "${next_version}"
+    ;;
+  verify_version)
+    releaser::verify_release_ready
+    ;;
+  prepare_release)
+    next_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
+    releaser::set_version_in_changelog "${changelog_file}" "${next_version}" "false"
+    releaser::set_version_in_file "pluginVersion = " "build.gradle" "${next_version}"
+    ;;
+  commit)
+    git add "${changelog_file}"
+    git add "build.gradle"
+    git commit --author "Tomasz Setkowski <tom@ai-traders.com>" -m "Version bump"
+    ;;
+  github_release)
+    set +u
+    if [[ -z "${GITHUB_TOKEN}" ]]; then
+      echo "GITHUB_TOKEN must be set for release"
+      if [[ -n "${VAULT_TOKEN}" ]]; then
+        echo "Trying to get GITHUB_TOKEN from vault"
+        GITHUB_TOKEN=$(vault read -field=token secret/gocd-s3-plugin/github)
+        export GITHUB_TOKEN
+      else
+        exit 1
+      fi
+    fi
+    releaser::prepare_github_release_bin
+
+    VERSION=$(ls build/libs/s3-artifact-plugin-*.jar | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+
+    changelog_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
+    if [ $changelog_version != $VERSION ]; then
+      echo "changelog version $changelog_version does not match file version $VERSION"
+      exit 2
+    fi
+
+    $GHRELEASE_BIN release \
+      --user tomzo \
+      --repo gocd-s3-artifact-plugin \
+      --tag $VERSION \
+      --name $VERSION \
+      --pre-release
+
+    for file in build/libs/s3-artifact-plugin-*.jar*; do
+      $GHRELEASE_BIN upload \
+        --user tomzo \
+        --repo gocd-s3-artifact-plugin \
+        --tag $VERSION \
+        --name "$file" \
+        --file "$file"
+    done
+    ;;
   generate_vault_token)
     vault_token=$(vault token create -orphan -ttl=48h -policy=gocd-s3-plugin -field token -metadata gocd_renew=true)
     secured_token_gocd=$(secret_ops::encrypt_with_gocd_top "${vault_token}")

@@ -7,6 +7,9 @@ pipelines:
     materials:
       git:
         type: configrepo
+        blacklist:
+          - "*.md"
+          - "build.gradle"
     secure_variables:
       VAULT_TOKEN: "AES:tkXiF3FyAiEU1al4iUusPg==:B+bIFfoYlX8w7VADLZIWVnx76LI/goIrOVN78gsP6BI="
     stages:
@@ -34,3 +37,42 @@ pipelines:
                arguments:
                 - -c
                 - ./tasks tf_apply destroy
+      - release:
+          approval: manual
+          clean_workspace: true
+          jobs:
+            github:
+              elastic_profile_id: w.c2.m2048.e10
+              tasks:
+                - fetch:
+                    stage: build
+                    job: build
+                    source: build/libs
+                    destination: build
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - ./tasks
+                      - github_release
+      - bump:
+          clean_workspace: true
+          jobs:
+            patch:
+              elastic_profile_id: w.c2.m2048.e10
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - ./tasks
+                      - set_version
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks commit
+                - exec:
+                    command: git
+                    arguments:
+                      - push
+                      - origin
+                      - master

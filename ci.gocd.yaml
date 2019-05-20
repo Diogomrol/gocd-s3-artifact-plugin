@@ -63,8 +63,8 @@ pipelines:
                 - exec:
                     command: /bin/bash
                     arguments:
-                      - ./tasks
-                      - set_version
+                      - -c
+                      - ./tasks bump
                 - exec:
                     command: /bin/bash
                     arguments:

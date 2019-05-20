@@ -114,6 +114,12 @@ case "${command}" in
     next_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
     releaser::set_version_in_file "pluginVersion = " "build.gradle" "${next_version}"
     ;;
+  bump)
+    set +u
+    releaser::bump_changelog_version "" true
+    next_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
+    releaser::set_version_in_file "pluginVersion = " "build.gradle" "${next_version}"
+    ;;
   verify_version)
     releaser::verify_release_ready
     ;;

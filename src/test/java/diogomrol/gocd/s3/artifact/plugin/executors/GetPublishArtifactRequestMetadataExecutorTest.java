@@ -30,7 +30,7 @@ public class GetPublishArtifactRequestMetadataExecutorTest {
 
         final String expectedJSON = "[" +
                 "{\"key\":\"Source\",\"metadata\":{\"required\":false,\"secure\":false}}," +
-                "{\"key\":\"Destination\",\"metadata\":{\"required\":false,\"secure\":false}}," +
+                "{\"key\":\"Destination\",\"metadata\":{\"required\":false,\"secure\":false}}" +
                 "]";
 
         assertThat(response.responseCode()).isEqualTo(200);

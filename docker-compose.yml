@@ -1,0 +1,19 @@
+version: '2.2'
+services:
+  default:
+    links:
+      - gocd:gocd
+    depends_on:
+      - agent
+  gocd:
+    image: gocd/gocd-server:v19.3.0
+    ports:
+      - 8153:8153
+    volumes:
+      - ${DOJO_WORK_OUTER}/build/libs:/godata/plugins/external
+  agent:
+    image: gocd/gocd-agent-alpine-3.9:v19.3.0
+    links:
+      - gocd:gocd
+    environment:
+      - GO_SERVER_URL=https://gocd:8154/go

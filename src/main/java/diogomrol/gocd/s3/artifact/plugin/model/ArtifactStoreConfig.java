@@ -17,16 +17,21 @@
 package diogomrol.gocd.s3.artifact.plugin.model;
 
 import com.google.common.collect.ImmutableSet;
-import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
-import diogomrol.gocd.s3.artifact.plugin.annotation.Validatable;
-import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationResult;
-import diogomrol.gocd.s3.artifact.plugin.utils.Util;
+import com.google.common.collect.Lists;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
+import diogomrol.gocd.s3.artifact.plugin.annotation.Validatable;
+import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationError;
+import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationResult;
+import diogomrol.gocd.s3.artifact.plugin.utils.Util;
+
+import java.util.List;
 
 public class ArtifactStoreConfig implements Validatable {
 
     private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Region", "AWSAccessKey", "AWSSecretAccessKey");
+    private static final ImmutableSet<String> AWS_ACCESS_PROPERTIES = ImmutableSet.of("AWSAccessKey", "AWSSecretAccessKey");
 
     @Expose
     @SerializedName("S3Bucket")
@@ -101,6 +106,11 @@ public class ArtifactStoreConfig implements Validatable {
 
     @Override
     public ValidationResult validate() {
-        return new ValidationResult(validateAllFieldsAsRequired(OPTIONAL_PROPERTIES));
+        List<ValidationError> validationErrors = Lists.newArrayList();
+        validationErrors.addAll(validateAllFieldsAsRequired(OPTIONAL_PROPERTIES));
+        validationErrors.addAll(validateAllOrNoneRequired(AWS_ACCESS_PROPERTIES));
+
+        return new ValidationResult(validationErrors);
+
     }
 }

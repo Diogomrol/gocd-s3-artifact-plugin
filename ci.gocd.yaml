@@ -11,7 +11,7 @@ pipelines:
           - "*.md"
           - "build.gradle"
     secure_variables:
-      VAULT_TOKEN: "AES:tkXiF3FyAiEU1al4iUusPg==:B+bIFfoYlX8w7VADLZIWVnx76LI/goIrOVN78gsP6BI="
+      VAULT_TOKEN: "AES:am1B7EuHGEV67+WKsAqzRQ==:AU2HecWwVR2T2OqyNN4D7+9DYWZQ3udAXXp8fnR8jjk="
     stages:
       - build:
           clean_workspace: true

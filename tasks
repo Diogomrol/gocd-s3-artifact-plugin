@@ -125,7 +125,7 @@ case "${command}" in
     ;;
   prepare_release)
     next_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
-    releaser::set_version_in_changelog "${changelog_file}" "${next_version}" "false"
+    releaser::set_version_in_changelog "${changelog_file}" "${next_version}" false
     releaser::set_version_in_file "pluginVersion = " "build.gradle" "${next_version}"
     ;;
   commit)

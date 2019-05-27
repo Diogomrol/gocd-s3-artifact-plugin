@@ -83,7 +83,7 @@ public class PublishArtifactExecutor implements RequestExecutor {
             }
             else if(matchingFiles.size() == 1) {
                 File sourceFile = matchingFiles.get(0);
-                String s3Key = normalizePath(Paths.get(s3InbucketPath, sourceFile.toPath().getFileName().toString()));
+                String s3Key = normalizePath(Paths.get(s3InbucketPath, sourceFile.toPath().toString()));
                 PutObjectRequest request = new PutObjectRequest(s3bucket, s3Key, new File(Paths.get(workingDir, sourceFile.toString()).toString()));
                 ObjectMetadata metadata = new ObjectMetadata();
                 request.setMetadata(metadata);

@@ -176,6 +176,34 @@ public class PublishArtifactExecutorTest {
     }
 
     @Test
+    public void shouldPublishArtifactUsingSourceFileWhenSourceSubfoldersAndDestinationFolder() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "bin/build.json", Optional.of("DestinationFolder"));
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        Path path = Paths.get(agentWorkingDir.getAbsolutePath(), "bin/build.json");
+        Paths.get(agentWorkingDir.getAbsolutePath(), "bin").toFile().mkdirs();
+        Files.write(path, "{\"content\":\"example artifact file\"}".getBytes());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "\"Source\": \"bin/build.json\"," +
+                "\"Destination\": \"DestinationFolder\"," +
+                "\"IsFile\": true" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(1)).putObject(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().getFile()).isEqualTo(path.toFile());
+        assertThat(requestCaptor.getValue().getBucketName()).isEqualTo("test");
+        assertThat(requestCaptor.getValue().getKey()).isEqualTo("DestinationFolder/bin/build.json");
+    }
+
+    @Test
     public void shouldPublishArtifactUsingSourceFileWhenNoDestinationFolder() throws IOException, JSONException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "build.json", Optional.empty());
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);

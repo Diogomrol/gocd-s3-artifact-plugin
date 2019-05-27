@@ -1,4 +1,6 @@
-### 2.0.1 - Unreleased
+### 2.0.1 (2019-May-27)
+
+Fixed single file upload when at subdirectory.
 
 ### 2.0.0 (2019-May-19)
 

@@ -101,6 +101,31 @@ public class PublishAndFetchIntegrationTest {
     }
 
     @Test
+    public void shouldPublishAndFetchArtifactFileWhenSourceInSubdirAndNoDestinationFolder() throws IOException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "bin/build.json", Optional.empty());
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, sourceWorkingDir.getAbsolutePath());
+
+        Path path = Paths.get(sourceWorkingDir.getAbsolutePath(), "bin/build.json");
+        Paths.get(sourceWorkingDir.getAbsolutePath(), "bin").toFile().mkdirs();
+        Files.write(path, "{\"content\":\"example artifact file\"}".getBytes());
+
+        when(publishRequest.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(publishRequest, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        Map<String, Object> responseHash = new Gson().fromJson(response.responseBody(), new TypeToken<Map<String,Object>>(){}.getType());
+        Map<String, Object> metadata = (Map<String, Object>)responseHash.get("metadata");
+        FetchArtifactConfig fetchArtifactConfig = new FetchArtifactConfig();
+        FetchArtifactRequest fetchArtifactRequest = new FetchArtifactRequest(storeConfig, metadata, fetchArtifactConfig, destinationWorkingDir.toString());
+        FetchArtifactExecutor executor = new FetchArtifactExecutor(fetchArtifactRequest, consoleLogger, s3ClientFactory);
+        GoPluginApiResponse fetchResponse = executor.execute();
+        assertThat(fetchResponse.responseCode()).isEqualTo(200);
+        Path destPath = Paths.get(destinationWorkingDir.getAbsolutePath(), "build.json");
+        assertThat(destPath).isRegularFile();
+    }
+
+    @Test
     public void shouldPublishAndFetchArtifactFileWhenUploadedManyFiles() throws IOException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "**/*.json", Optional.of("DestinationFolder"));
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);

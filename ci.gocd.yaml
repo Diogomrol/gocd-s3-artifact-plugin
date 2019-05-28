@@ -15,7 +15,8 @@ pipelines:
     stages:
       - build:
           clean_workspace: true
-          elastic_profile_id: w.c2.m2048.e10
+          resources:
+            - docker
           artifacts:
            - build:
                source: build/libs/*.jar*
@@ -42,7 +43,8 @@ pipelines:
           clean_workspace: true
           jobs:
             github:
-              elastic_profile_id: w.c2.m2048.e10
+              resources:
+                - docker
               tasks:
                 - fetch:
                     stage: build
@@ -58,7 +60,8 @@ pipelines:
           clean_workspace: true
           jobs:
             patch:
-              elastic_profile_id: w.c2.m2048.e10
+              resources:
+                - docker
               tasks:
                 - exec:
                     command: /bin/bash

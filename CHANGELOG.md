@@ -1,3 +1,5 @@
+### 2.1.1 - Unreleased
+
 ### 2.1.0 (2019-May-28)
 
 Added support for authentication using AWS instance profiles.

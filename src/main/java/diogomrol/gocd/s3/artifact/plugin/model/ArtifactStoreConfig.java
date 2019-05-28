@@ -16,13 +16,23 @@
 
 package diogomrol.gocd.s3.artifact.plugin.model;
 
-import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
-import diogomrol.gocd.s3.artifact.plugin.annotation.Validatable;
-import diogomrol.gocd.s3.artifact.plugin.utils.Util;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import diogomrol.gocd.s3.artifact.plugin.annotation.FieldMetadata;
+import diogomrol.gocd.s3.artifact.plugin.annotation.Validatable;
+import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationError;
+import diogomrol.gocd.s3.artifact.plugin.annotation.ValidationResult;
+import diogomrol.gocd.s3.artifact.plugin.utils.Util;
+
+import java.util.List;
 
 public class ArtifactStoreConfig implements Validatable {
+
+    private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Region", "AWSAccessKey", "AWSSecretAccessKey");
+    private static final ImmutableSet<String> AWS_ACCESS_PROPERTIES = ImmutableSet.of("AWSAccessKey", "AWSSecretAccessKey");
+
     @Expose
     @SerializedName("S3Bucket")
     @FieldMetadata(key = "S3Bucket", required = true)
@@ -30,17 +40,17 @@ public class ArtifactStoreConfig implements Validatable {
 
     @Expose
     @SerializedName("Region")
-    @FieldMetadata(key = "Region", required = true, secure = false)
+    @FieldMetadata(key = "Region", required = false, secure = false)
     private String region;
 
     @Expose
     @SerializedName("AWSAccessKey")
-    @FieldMetadata(key = "AWSAccessKey", required = true)
+    @FieldMetadata(key = "AWSAccessKey", required = false)
     private String awsaccesskey;
 
     @Expose
     @SerializedName("AWSSecretAccessKey")
-    @FieldMetadata(key = "AWSSecretAccessKey", required = true, secure = true)
+    @FieldMetadata(key = "AWSSecretAccessKey", required = false, secure = true)
     private String awssecretaccesskey;
 
 
@@ -92,5 +102,15 @@ public class ArtifactStoreConfig implements Validatable {
 
     public static ArtifactStoreConfig fromJSON(String json) {
         return Util.GSON.fromJson(json, ArtifactStoreConfig.class);
+    }
+
+    @Override
+    public ValidationResult validate() {
+        List<ValidationError> validationErrors = Lists.newArrayList();
+        validationErrors.addAll(validateAllFieldsAsRequired(OPTIONAL_PROPERTIES));
+        validationErrors.addAll(validateAllOrNoneRequired(AWS_ACCESS_PROPERTIES));
+
+        return new ValidationResult(validationErrors);
+
     }
 }

@@ -16,15 +16,21 @@
 
 package diogomrol.gocd.s3.artifact.plugin.annotation;
 
-import diogomrol.gocd.s3.artifact.plugin.utils.Util;
+import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
+import diogomrol.gocd.s3.artifact.plugin.utils.Util;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface Validatable {
+
+    ValidationResult validate();
+
     default String toJSON() {
         return Util.GSON.toJson(this);
     }
@@ -35,13 +41,39 @@ public interface Validatable {
     }
 
     default List<ValidationError> validateAllFieldsAsRequired() {
+        return validateAllFieldsAsRequired(Collections.emptySet());
+    }
+
+    default List<ValidationError> validateAllFieldsAsRequired(Set<String> excluding) {
         return toProperties().entrySet().stream()
-                .filter(entry -> StringUtils.isBlank(entry.getValue()) && !entry.getKey().equals("Destination"))
+                .filter(entry -> !excluding.contains(entry.getKey()))
+                .filter(entry -> StringUtils.isBlank(entry.getValue()))
                 .map(entry -> new ValidationError(entry.getKey(), entry.getKey() + " must not be blank."))
                 .collect(Collectors.toList());
     }
 
-    default ValidationResult validate() {
-        return new ValidationResult(validateAllFieldsAsRequired());
+    default List<ValidationError> validateAllOrNoneRequired(Set<String> including) {
+
+        boolean allBlank = true, noneBlank = true;
+
+        for (String propertyName : including) {
+            String value = toProperties().get(propertyName);
+
+            allBlank &= StringUtils.isBlank(value);
+            noneBlank &= StringUtils.isNotBlank(value);
+        }
+
+        if (allBlank || noneBlank) {
+            return Collections.emptyList();
+        } else {
+            List<String> fieldsList = Lists.newArrayList(including);
+            String fields = String.join(" and ", String.join(", ", fieldsList.subList(0, fieldsList.size() - 1)), fieldsList.get(fieldsList.size() - 1));
+
+            String errorMessage = fields + " must be filled altogether, if required.";
+
+            return including.stream()
+                    .map(s -> new ValidationError(s, errorMessage))
+                    .collect(Collectors.toList());
+        }
     }
 }

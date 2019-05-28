@@ -39,7 +39,7 @@ public class ValidateArtifactStoreConfigExecutorExecutorTest {
     }
 
     @Test
-    public void shouldValidateMandatoryKeys() throws Exception {
+    public void shouldRejectMissingFields() throws Exception {
         when(request.requestBody()).thenReturn("{}");
 
         final GoPluginApiResponse response = new ValidateArtifactStoreConfigExecutor(request).execute();
@@ -48,25 +48,76 @@ public class ValidateArtifactStoreConfigExecutorExecutorTest {
                 "  {\n" +
                 "    \"key\": \"S3Bucket\",\n" +
                 "    \"message\": \"S3Bucket must not be blank.\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"key\": \"Region\",\n" +
-                "    \"message\": \"Region must not be blank.\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"key\": \"AWSAccessKey\",\n" +
-                "    \"message\": \"AWSAccessKey must not be blank.\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"key\": \"AWSSecretAccessKey\",\n" +
-                "    \"message\": \"AWSSecretAccessKey must not be blank.\"\n" +
                 "  }\n" +
                 "]";
         JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.NON_EXTENSIBLE);
     }
 
     @Test
-    public void shouldValidateProperData() throws JSONException {
+    public void shouldRejectAWSAccessKeyAlone() throws Exception {
+        String requestBody = new JSONObject()
+                .put("S3Bucket", "http://localhost/index")
+                .put("Region", "us-west-1")
+                .put("AWSAccessKey", "chuck-norris")
+                .toString();
+        when(request.requestBody()).thenReturn(requestBody);
+
+        final GoPluginApiResponse response = new ValidateArtifactStoreConfigExecutor(request).execute();
+
+        String expectedJSON = "[\n" +
+                "  {\n" +
+                "    \"key\": \"AWSAccessKey\",\n" +
+                "    \"message\": \"AWSAccessKey and AWSSecretAccessKey must be filled altogether, if required.\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"key\": \"AWSSecretAccessKey\",\n" +
+                "    \"message\": \"AWSAccessKey and AWSSecretAccessKey must be filled altogether, if required.\"\n" +
+                "  }\n" +
+                "]";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void shouldRejectAWSSecretAccessKeyAlone() throws Exception {
+        String requestBody = new JSONObject()
+                .put("S3Bucket", "http://localhost/index")
+                .put("Region", "us-west-1")
+                .put("AWSSecretAccessKey", "chuck-norris-doesnt-need-passwords")
+                .toString();
+        when(request.requestBody()).thenReturn(requestBody);
+
+        final GoPluginApiResponse response = new ValidateArtifactStoreConfigExecutor(request).execute();
+
+        String expectedJSON = "[\n" +
+                "  {\n" +
+                "    \"key\": \"AWSAccessKey\",\n" +
+                "    \"message\": \"AWSAccessKey and AWSSecretAccessKey must be filled altogether, if required.\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"key\": \"AWSSecretAccessKey\",\n" +
+                "    \"message\": \"AWSAccessKey and AWSSecretAccessKey must be filled altogether, if required.\"\n" +
+                "  }\n" +
+                "]";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void shouldAcceptMinimalFields() throws Exception {
+        when(request.requestBody()).thenReturn("{}");
+
+        final GoPluginApiResponse response = new ValidateArtifactStoreConfigExecutor(request).execute();
+
+        String expectedJSON = "[\n" +
+                "  {\n" +
+                "    \"key\": \"S3Bucket\",\n" +
+                "    \"message\": \"S3Bucket must not be blank.\"\n" +
+                "  }\n" +
+                "]";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void shouldAcceptAllFields() throws JSONException {
         String requestBody = new JSONObject()
                 .put("S3Bucket", "http://localhost/index")
                 .put("Region", "us-west-1")

@@ -101,6 +101,31 @@ public class PublishAndFetchIntegrationTest {
     }
 
     @Test
+    public void shouldPublishAndFetchArtifactFileAtLongPath() throws IOException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "terraform/env.sh", Optional.of("xyz"));
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, sourceWorkingDir.getAbsolutePath());
+
+        Path path = Paths.get(sourceWorkingDir.getAbsolutePath(), "terraform", "env.sh");
+        Files.createDirectories(Paths.get(sourceWorkingDir.getAbsolutePath(), "terraform"));
+        Files.write(path, "example artifact file".getBytes());
+
+        when(publishRequest.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(publishRequest, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        Map<String, Object> responseHash = new Gson().fromJson(response.responseBody(), new TypeToken<Map<String,Object>>(){}.getType());
+        Map<String, Object> metadata = (Map<String, Object>)responseHash.get("metadata");
+        FetchArtifactConfig fetchArtifactConfig = new FetchArtifactConfig();
+        FetchArtifactRequest fetchArtifactRequest = new FetchArtifactRequest(storeConfig, metadata, fetchArtifactConfig, destinationWorkingDir.toString());
+        FetchArtifactExecutor executor = new FetchArtifactExecutor(fetchArtifactRequest, consoleLogger, s3ClientFactory);
+        GoPluginApiResponse fetchResponse = executor.execute();
+        assertThat(fetchResponse.responseCode()).isEqualTo(200);
+        Path destPath = Paths.get(destinationWorkingDir.getAbsolutePath(), "env.sh");
+        assertThat(destPath).isRegularFile();
+    }
+
+    @Test
     public void shouldPublishAndFetchArtifactFileWhenSourceInSubdirAndNoDestinationFolder() throws IOException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "bin/build.json", Optional.empty());
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);

@@ -98,6 +98,23 @@ public class FetchArtifactExecutorTest {
     }
 
     @Test
+    public void shouldFetchSingleFileWhenUploadedAtDestinationFolderAndSubPathSpecified() {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("Source", "terraform/env.sh");
+        metadata.put("Destination", "xyz");
+        metadata.put("IsFile", true);
+        fetchArtifactConfig = new FetchArtifactConfig("xyz", "", false);
+        FetchArtifactRequest fetchArtifactRequest = new FetchArtifactRequest(storeConfig, metadata, fetchArtifactConfig, agentWorkingDir.toString());
+        FetchArtifactExecutor executor = new FetchArtifactExecutor(fetchArtifactRequest, consoleLogger, s3ClientFactory);
+        final GoPluginApiResponse response = executor.execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        verify(s3Client, times(1)).getObject(getRequestCaptor.capture(), fileCaptor.capture());
+        assertThat(getRequestCaptor.getValue().getBucketName()).isEqualTo("testBucket");
+        assertThat(getRequestCaptor.getValue().getKey()).isEqualTo("xyz/terraform/env.sh");
+        assertThat(fileCaptor.getValue().getAbsoluteFile()).isEqualTo(Paths.get(agentWorkingDir.toString(), "env.sh").toFile());
+    }
+
+    @Test
     public void shouldFetchSingleFileWhenLocalDestination() {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("Source", "build.json");

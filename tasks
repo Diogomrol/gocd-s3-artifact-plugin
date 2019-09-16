@@ -72,8 +72,6 @@ case "${command}" in
           exit 1
         fi
       fi
-      # Patch dojo on Mac
-      unset TMPDIR
       dojo -c e2e/terraform/Dojofile "./tasks _tf_apply $2"
       ;;
   wait_online)

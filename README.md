@@ -40,7 +40,7 @@ Note: Action `s3:DeleteObject` is not needed, plugin does not delete any objects
 
 ### Plugin Installation
 
-Build the plugin as mentioned above.
+Build the plugin as mentioned [below](https://github.com/Diogomrol/gocd-s3-artifact-plugin#development).
 
 Copy the file `build/libs/s3-artifact-plugin-VERSION.jar` to the GoCD server under `${GO_SERVER_DIR}/plugins/external` and restart the server.
 

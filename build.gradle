@@ -15,34 +15,35 @@
  */
 
 apply plugin: 'java'
-apply from: 'https://raw.githubusercontent.com/gocd/gradle-task-helpers/4d3374681565f5eb8b06e7389e069d4d997efefc/helper.gradle'
-
+apply from: "https://raw.githubusercontent.com/spacesheepgames/gocd-plugin-gradle-task-helpers/master/helper.gradle?_=${(int) (new Date().toInstant().epochSecond / 60)}"
 
 gocdPlugin {
-    id = 'cd.go.artifact.s3'
-    pluginVersion = "2.1.1"
+    id = 'games.spacesheep.artifact.gcs'
+    pluginVersion = "0.1.0"
     goCdVersion = '18.7.0'
-    name = 'Artifact plugin for S3'
-    description = 'Plugin allows to store and fetch artifacts using Amazon S3'
-    vendorName = 'Diogo Oliveira'
-    vendorUrl = 'https://github.com/Diogomrol/s3-artifact-plugin'
+    name = 'Artifact plugin for GCS'
+    description = 'Plugin allows to store and fetch artifacts using Google Cloud Storage'
+    vendorName = 'Space Sheep Games'
+    vendorUrl = 'https://github.com/fbcolombo/gcs-artifact-plugin'
 
     githubRepo {
         owner = System.getenv('GITHUB_USER') ?: 'bob'
-        repo = 's3-artifact-plugin'
+        repo = 'gcs-artifact-plugin'
         token = System.getenv('GITHUB_TOKEN') ?: 'bad-token'
     }
 
     pluginProject = project
 
     prerelease = !"No".equalsIgnoreCase(System.getenv('PRERELEASE'))
-    assetsToRelease = [project.tasks.findByName('jar')]
+    assetsToRelease = [jar]
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-version = gocdPlugin.fullVersion(project)
+allprojects {
+    version = gocdPlugin.fullVersion(project)
+}
 
 repositories {
     mavenCentral()
@@ -59,7 +60,7 @@ sourceSets {
 
 test {
     useJUnit {
-        excludeCategories 'diogomrol.gocd.s3.artifact.plugin.IntegrationTests'
+        excludeCategories 'spacesheepgames.gocd.gcs.artifact.plugin.IntegrationTests'
     }
 }
 
@@ -72,17 +73,19 @@ task integrationTest(type: Test) {
     shouldRunAfter test
 
     useJUnit {
-        includeCategories 'diogomrol.gocd.s3.artifact.plugin.IntegrationTests'
+        includeCategories 'spacesheepgames.gocd.gcs.artifact.plugin.IntegrationTests'
     }
 }
 
 check.dependsOn integrationTest
 
 dependencies {
+    implementation platform('com.google.cloud:libraries-bom:20.9.0')
+
+    compile group: 'com.google.cloud', name:'google-cloud-storage', version:'2.0.0'
     compileOnly group: 'cd.go.plugin', name: 'go-plugin-api', version: '18.6.0'
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
     compile group: 'com.spotify', name: 'docker-client', version: '8.10.1'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.531'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
     compile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
 

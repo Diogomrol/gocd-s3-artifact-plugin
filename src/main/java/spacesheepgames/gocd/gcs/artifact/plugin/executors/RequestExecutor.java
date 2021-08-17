@@ -1,6 +1,5 @@
 /*
- * Copyright 2018 Diogo Oliveira
- * Copyright 2017 ThoughtWorks, Inc.
+ * Copyright 2018 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,4 +14,11 @@
  * limitations under the License.
  */
 
-rootProject.name = 'gcs-artifact-plugin'
+package spacesheepgames.gocd.gcs.artifact.plugin.executors;
+
+import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
+
+public interface RequestExecutor {
+
+    GoPluginApiResponse execute() throws Exception;
+}

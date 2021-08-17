@@ -1,19 +1,111 @@
+# The below config will run a server and agent with the appropriate plugins and permessions.
+# Before running, define GOOGLE_APPLICATION_CREDENTIALS to point to a service account key to use
+#####################
+# You can copy the config below to create the plugin artifact store and pipelines that use it, just update the bucket.
+#  <artifactStores>
+#  <artifactStore id="test-store" pluginId="games.spacesheep.artifact.gcs">
+#  <property>
+#  <key>GCSBucket</key>
+#  <value>forhumans-gocd-test-bucket</value>
+#  </property>
+#  <property>
+#  <key>ProjectID</key>
+#  <value>forhumans-infrastructure</value>
+#  </property>
+#  </artifactStore>
+#  </artifactStores>
+#  <pipelines group="defaultGroup">
+#  <pipeline name="TestPipeline">
+#  <materials>
+#  <git url="https://github.com/fbcolombo/gocd-s3-artifact-plugin" dest="source" />
+#  </materials>
+#  <stage name="TestStage">
+#  <jobs>
+#  <job name="TestJob">
+#  <tasks>
+#  <exec command="cp">
+#  <arg>./source/README.md</arg>
+#  <arg>./</arg>
+#  </exec>
+#  </tasks>
+#  <artifacts>
+#  <artifact type="external" id="readmeid" storeId="test-store">
+#  <configuration>
+#  <property>
+#  <key>Source</key>
+#  <value>README.md</value>
+#  </property>
+#  <property>
+#  <key>Destination</key>
+#  <value>README.md</value>
+#  </property>
+#  </configuration>
+#  </artifact>
+#  </artifacts>
+#  </job>
+#  </jobs>
+#  </stage>
+#  </pipeline>
+#  <pipeline name="TestDependencyPipeline">
+#  <materials>
+#  <pipeline pipelineName="TestPipeline" stageName="TestStage" materialName="readme" />
+#  </materials>
+#  <stage name="TestDependencyStage">
+#  <jobs>
+#  <job name="TestDependencyJob">
+#  <tasks>
+#  <fetchartifact artifactOrigin="external" artifactId="readmeid" pipeline="TestPipeline" stage="TestStage" job="TestJob">
+#  <runif status="passed" />
+#  </fetchartifact>
+#  <exec command="cat">
+#  <arg>README.md</arg>
+#  </exec>
+#  <exec command="bash">
+#  <arg>-c</arg>
+#  <arg>echo "Hello World" &gt; hello.txt</arg>
+#  <runif status="passed" />
+#  </exec>
+#  </tasks>
+#  <artifacts>
+#  <artifact type="external" id="hellowordl" storeId="test-store">
+#  <configuration>
+#  <property>
+#  <key>Source</key>
+#  <value>hello.txt</value>
+#  </property>
+#  <property>
+#  <key>Destination</key>
+#  <value>${GO_PIPELINE_NAME}/${GO_STAGE_NAME}/${GO_JOB_NAME}/${GO_PIPELINE_COUNTER}.${GO_STAGE_COUNTER}/hello.txt</value>
+#  </property>
+#  </configuration>
+#  </artifact>
+#  </artifacts>
+#  </job>
+#  </jobs>
+#  </stage>
+#  </pipeline>
+#  </pipelines>
+
 version: '2.2'
 services:
-  default:
-    links:
-      - gocd:gocd
-    depends_on:
-      - agent
   gocd:
-    image: gocd/gocd-server:v19.3.0
+    image: gocd/gocd-server:v20.5.0
     ports:
-      - 8153:8153
+      - "8153:8153"
     volumes:
-      - ${DOJO_WORK_OUTER}/build/libs:/godata/plugins/external
+      - ${PWD}/build/libs:/plugins
+      - ${PWD}/scripts:/docker-entrypoint.d
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/var/secret/key.json
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/var/secret/key.json
   agent:
-    image: gocd/gocd-agent-alpine-3.9:v19.3.0
+    image: gocd/gocd-agent-alpine-3.9:v20.5.0
     links:
       - gocd:gocd
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/var/secret/key.json
     environment:
-      - GO_SERVER_URL=https://gocd:8154/go
+      - GO_SERVER_URL=http://gocd:8153/go
+      - GOOGLE_APPLICATION_CREDENTIALS=/var/secret/key.json
+    depends_on:
+      - gocd

@@ -1,48 +1,21 @@
 [![Build Status](https://travis-ci.com/Diogomrol/gocd-s3-artifact-plugin.svg?branch=master)](https://travis-ci.com/Diogomrol/gocd-s3-artifact-plugin)
-# GoCD S3 Artifact Plugin
+# GoCD GCS Artifact Plugin
 
-The S3 artifact plugin provides a way to publish and fetch artifacts to/from AWS S3.
+The GCS artifact plugin provides a way to publish and fetch artifacts to/from Google Cloud Storage.
 
 ## Getting started
 
 ### Requirements
 
  - GoCD Server 18.7+
- - AWS account with access to S3 bucket
+ - GCP service account with access to a GCS bucket
 
-Following IAM policy should suffice to publish and fetch artifacts:
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListBucket"
-      ],
-     "Resource": [
-        "arn:aws:s3:::my-artifacts-bucket"
-      ]
-    },
-    {
-      "Action": [
-        "s3:GetObject",
-        "s3:HeadBucket",
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::my-artifacts-bucket/*"
-    }
-  ]
-}
-```
-Note: Action `s3:DeleteObject` is not needed, plugin does not delete any objects.
 
 ### Plugin Installation
 
 Build the plugin as mentioned [below](https://github.com/Diogomrol/gocd-s3-artifact-plugin#development).
 
-Copy the file `build/libs/s3-artifact-plugin-VERSION.jar` to the GoCD server under `${GO_SERVER_DIR}/plugins/external` and restart the server.
+Copy the file `build/libs/gcs-artifact-plugin-VERSION.jar` to the GoCD server under `${GO_SERVER_DIR}/plugins/external` and restart the server.
 
 ### Plugin Configuration
 
@@ -53,19 +26,18 @@ There are three levels of configuration needed in order for publishing and fetch
 1. Login to GoCD server as admin and navigate to Admin > Artifact Stores
 2. Click on `Add` to add the store details for the plugin.
    - Specify the store id (an identifier you wish to give to this store)
-   - Choose the Artifact plugin for S3
-   - Specify the `S3 Bucket` and `S3 Region`
-   - Specify the `AWS Access Key Id` and `AWS Secret Access Key`. Leave blank to use the instance profile.
-
-   ![](images/artifact_store.png)
+   - Choose the Artifact plugin for GCS
+   - Specify the `GCS Bucket` and `Project ID`
+3. Additionally, you must define the `GOOGLE_APPLICATION_CREDENTIALS` to point to 
+   the service account key the agent must use to access the GCS API.
 
 See [specification](#specification) lower for more details.
 
 #### Publish artifact config
 
 Options:
- * `Source` - ant-like pattern for matching files to upload to S3. If directory is matched, all files of that directory are also uploaded.
- * `Destination` - a prefix in S3 bucket at which files will be uploaded.
+ * `Source` - ant-like pattern for matching files to upload to GCS. If directory is matched, all files of that directory are also uploaded.
+ * `Destination` - a prefix in GCS bucket at which files will be uploaded.
 
 Setup through Web UI:
 1. Navigate to the `Artifacts` tab under Stage > Job
@@ -84,7 +56,7 @@ See [specification](#specification) lower for more details.
 
 Options:
  * `IsFile` - determines if we are fetching just a single file.
- * `SubPath` - When fetching many files, a common prefix of objects in S3 bucket. When fetching single file: this can be a path in S3. It is possible to skip the path if upstream job has uploaded exactly 1 file. The **SubPath** should not include the `Destination` part of [publish artifact config](#publish-artifact-config), see [specification](#specification) lower for more details.
+ * `SubPath` - When fetching many files, a common prefix of objects in GCS bucket. When fetching single file this can be a path in GCS. It is possible to skip the path if upstream job has uploaded exactly 1 file. The **SubPath** should not include the `Destination` part of [publish artifact config](#publish-artifact-config), see [specification](#specification) lower for more details.
  * `Destination` - a local subdirectory into which files will be fetched.
 
 
@@ -204,7 +176,7 @@ On GoCD server:
   "IsFile" : true
 }
 ```
-On AWS bucket `x/y/bin/build.json`.
+On GCS bucket `x/y/bin/build.json`.
 
 ### Many files upload
 
@@ -221,7 +193,7 @@ On GoCD server:
   "IsFile" : false
 }
 ```
-On AWS bucket: `/bin/build.json` and `/bin/a.bin`.
+On GCS bucket: `/bin/build.json` and `/bin/a.bin`.
 
 **Scenario 2:**
  * agent working directory has `./bin/build.json` and `./bin/a.bin` files.
@@ -237,7 +209,7 @@ On GoCD server:
   "IsFile" : false
 }
 ```
-On AWS bucket: `/x/y/bin/build.json` and `/x/y/bin/a.bin`.
+On GCS bucket: `/x/y/bin/build.json` and `/x/y/bin/a.bin`.
 
 ### Fetch single file
 
@@ -253,7 +225,7 @@ On GoCD we have
 "IsFile" : true
 }
 ```
-On AWS bucket `/bin/build.json`
+On GCS bucket `/bin/build.json`
 
 **Result:**
 Agent will fetch `bin/build.json` to `./build.json`.
@@ -271,7 +243,7 @@ On GoCD we have
   "IsFile" : true
 }
 ```
-On AWS bucket `/bin/build.json`.
+On GCS bucket `/bin/build.json`.
 Agent will fetch `bin/build.json` to `z/build.json`.
 
 ### Fetch directory (prefix)
@@ -287,7 +259,7 @@ On GoCD we have:
   "IsFile" : false
 }
 ```
-On AWS bucket:
+On GCS bucket:
  - `/x/y/bin/build.json`
  - `/x/y/bin/a.bin`
  - `/abc/ignored`

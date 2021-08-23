@@ -60,6 +60,7 @@ public class PublishArtifactExecutor implements RequestExecutor {
         ArtifactPlan artifactPlan = publishArtifactRequest.getArtifactPlan();
         final ArtifactStoreConfig artifactStoreConfig = publishArtifactRequest.getArtifactStore().getArtifactStoreConfig();
         try {
+            final int bufferSize = 1024 * 1024 * 128; // 128Mi
             final Storage storage = clientFactory.storage(artifactStoreConfig);
             final String sourcePattern = artifactPlan.getArtifactPlanConfig().getSource();
             String destinationFolder = artifactPlan.getArtifactPlanConfig().getDestination();
@@ -89,7 +90,7 @@ public class PublishArtifactExecutor implements RequestExecutor {
                 BlobId blobId = BlobId.of(gcsBucket, blobName);
                 BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
                 Path sourcePath = Paths.get(workingDir, sourceFile.getPath());
-                storage.create(blobInfo,  Files.readAllBytes(sourcePath));
+                storage.createFrom(blobInfo, sourcePath, bufferSize);
                 publishArtifactResponse.addMetadata("Source", sourceFile.toString());
                 publishArtifactResponse.addMetadata("IsFile", true);
                 consoleLogger.info(String.format("Source file `%s` successfully pushed to GCS bucket `%s`.", sourceFile, artifactStoreConfig.getGcsBucket()));
@@ -101,7 +102,7 @@ public class PublishArtifactExecutor implements RequestExecutor {
                     String blobName = normalizePath(Paths.get(gcsInBucketPath, sourceFile.getPath()));
                     BlobId blobId = BlobId.of(gcsBucket, blobName);
                     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-                    storage.create(blobInfo,  Files.readAllBytes(sourceFilePath));
+                    storage.createFrom(blobInfo, sourceFilePath, bufferSize);
                     consoleLogger.info(String.format("Source file `%s` successfully pushed to GCS bucket `%s`.", sourceFile, artifactStoreConfig.getGcsBucket()));
                 }
                 publishArtifactResponse.addMetadata("Source", sourcePattern);

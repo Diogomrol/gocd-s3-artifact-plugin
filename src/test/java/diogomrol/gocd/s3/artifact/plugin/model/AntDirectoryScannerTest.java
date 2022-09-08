@@ -66,7 +66,54 @@ public class AntDirectoryScannerTest {
                 .hasSize(1)
                 .contains(test);
     }
-
+    @Test
+    public void shouldListFilesRecursivelyInSubFolders() throws IOException {
+        File test = createFile("out/test.bin");
+        File testA = createFile("out/dir-a/test-a.bin");
+        File testB1 = createFile("out/dir-a/dir-b/test-b1.bin");
+        File testB2 = createFile("out/dir-a/dir-b/test-b2.bin");
+        File testC = createFile("out/dir-a/dir-b/dir-c/test-c.bin");
+        List<File> files = scanner.getFilesMatchingPattern(workingDir, "out/");
+        assertThat(files)
+                .hasSize(5)
+                .contains(test)
+                .contains(testA)
+                .contains(testB1)
+                .contains(testB2)
+                .contains(testC);
+    }
+    @Test
+    public void shouldListFilesRecursivelyInSubFoldersForGlobPattern() throws IOException {
+        File test = createFile("out/test.bin");
+        File testA = createFile("out/dir-a/test-a.bin");
+        File testB1 = createFile("out/dir-a/dir-b/test-b1.bin");
+        File testB2 = createFile("out/dir-a/dir-b/test-b2.bin");
+        File testC = createFile("out/dir-a/dir-b/dir-c/test-c.bin");
+        List<File> files = scanner.getFilesMatchingPattern(workingDir, "out/dir-a/**/*");
+        assertThat(files)
+                .hasSize(4)
+                .contains(testA)
+                .contains(testB1)
+                .contains(testB2)
+                .contains(testC);
+    }
+    @Test
+    public void shouldListFilesWithPatternRecursivelyInSubFoldersForGlobPattern() throws IOException {
+        File test = createFile("out/test.bin");
+        File testA = createFile("out/dir-a/test-a.bin");
+        File testB1 = createFile("out/dir-a/dir-b/test-b1.bin");
+        File testB2 = createFile("out/dir-a/dir-b/test-b2.bin");
+        File testC = createFile("out/dir-a/dir-b/dir-c/test-c.bin");
+        File testD = createFile("out/dir-d/test-d.txt");
+        List<File> files = scanner.getFilesMatchingPattern(workingDir, "out/**/*.bin");
+        assertThat(files)
+                .hasSize(5)
+                .contains(test)
+                .contains(testA)
+                .contains(testB1)
+                .contains(testB2)
+                .contains(testC);
+    }
 
     private File createFile(String path) throws IOException {
         Path filepath = Paths.get(workingDir.toPath().toAbsolutePath().toString(), path);

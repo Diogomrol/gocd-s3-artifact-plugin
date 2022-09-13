@@ -67,6 +67,22 @@ public class AntDirectoryScannerTest {
                 .contains(test);
     }
     @Test
+    public void shouldListFilesRecursivelyInSubFoldersForPatternWithoutTrailingSlash() throws IOException {
+        File test = createFile("out/test.bin");
+        File testA = createFile("out/dir-a/test-a.bin");
+        File testB1 = createFile("out/dir-a/dir-b/test-b1.bin");
+        File testB2 = createFile("out/dir-a/dir-b/test-b2.bin");
+        File testC = createFile("out/dir-a/dir-b/dir-c/test-c.bin");
+        List<File> files = scanner.getFilesMatchingPattern(workingDir, "out");
+        assertThat(files)
+                .hasSize(5)
+                .contains(test)
+                .contains(testA)
+                .contains(testB1)
+                .contains(testB2)
+                .contains(testC);
+    }
+    @Test
     public void shouldListFilesRecursivelyInSubFolders() throws IOException {
         File test = createFile("out/test.bin");
         File testA = createFile("out/dir-a/test-a.bin");

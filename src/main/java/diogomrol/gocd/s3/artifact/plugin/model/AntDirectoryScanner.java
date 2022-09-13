@@ -1,15 +1,19 @@
 package diogomrol.gocd.s3.artifact.plugin.model;
 
 import org.apache.tools.ant.DirectoryScanner;
+
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class AntDirectoryScanner {
 
     public List<File> getFilesMatchingPattern(File baseDir, String pattern) {
+        File inputFile = new File(baseDir, pattern);
+        if (inputFile.isDirectory()) {
+            pattern += pattern.charAt(pattern.length() - 1) != File.separatorChar ? File.separator : "";
+        }
+
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(baseDir);
         scanner.setIncludes(pattern.trim().split(" *, *"));

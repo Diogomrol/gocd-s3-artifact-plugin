@@ -9,14 +9,12 @@ import java.util.List;
 public class AntDirectoryScanner {
 
     public List<File> getFilesMatchingPattern(File baseDir, String pattern) {
-        File inputFile = new File(baseDir, pattern);
-        if (inputFile.isDirectory()) {
-            pattern += pattern.charAt(pattern.length() - 1) != File.separatorChar ? File.separator : "";
-        }
+        String[] inputPatterns = pattern.trim().split(" *, *");
+        String[] parsedPatterns = getParsedPatterns(baseDir, inputPatterns);
 
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(baseDir);
-        scanner.setIncludes(pattern.trim().split(" *, *"));
+        scanner.setIncludes(parsedPatterns);
         scanner.scan();
 
         String[] allPaths = scanner.getIncludedFiles();
@@ -33,12 +31,28 @@ public class AntDirectoryScanner {
             }
         }
 
-        for (int i = 0; i < allPaths.length; i++) {
-            File file = new File(allPaths[i]);
+        for (String allPath : allPaths) {
+            File file = new File(allPath);
             if ((!allFiles.contains(file)) && (!file.isDirectory())) {
-                allFiles.add(new File(allPaths[i]));
+                allFiles.add(new File(allPath));
             }
         }
         return allFiles;
+    }
+
+    private String[] getParsedPatterns(File baseDir, String[] inputPatterns) {
+        String[] parsedPatterns = new String[inputPatterns.length];
+        for (int i = 0; i < inputPatterns.length; i++) {
+            String inputPattern = inputPatterns[i];
+            File inputFile = new File(baseDir, inputPattern);
+            if (inputFile.isDirectory()) {
+                inputPattern += inputPattern.charAt(inputPattern.length() - 1) != File.separatorChar ? File.separator : "";
+            }
+            if (inputPattern.matches("\\w+\\/\\*$")) {
+                inputPattern = inputPattern.substring(0, inputPattern.length() - 1);
+            }
+            parsedPatterns[i] = inputPattern;
+        }
+        return parsedPatterns;
     }
 }

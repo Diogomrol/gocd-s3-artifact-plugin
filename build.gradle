@@ -20,7 +20,7 @@ apply from: 'https://raw.githubusercontent.com/gocd/gradle-task-helpers/4d337468
 
 gocdPlugin {
     id = 'cd.go.artifact.s3'
-    pluginVersion = "2.1.3"
+    pluginVersion = "2.1.4"
     goCdVersion = '18.7.0'
     name = 'Artifact plugin for S3'
     description = 'Plugin allows to store and fetch artifacts using Amazon S3'

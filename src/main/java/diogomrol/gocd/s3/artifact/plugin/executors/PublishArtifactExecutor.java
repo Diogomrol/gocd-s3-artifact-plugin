@@ -27,7 +27,6 @@ import com.thoughtworks.go.plugin.api.response.GoPluginApiResponse;
 import diogomrol.gocd.s3.artifact.plugin.model.*;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -73,8 +72,15 @@ public class PublishArtifactExecutor implements RequestExecutor {
                 s3InbucketPath = "";
             }
 
-            List<File> matchingFiles = scanner.getFilesMatchingPattern(new File(workingDir), sourcePattern);
-            if(matchingFiles.size() == 0) {
+            ScanResult scanResult = scanner.getFilesMatchingPattern(new File(workingDir), sourcePattern);
+            List<File> matchingFiles = scanResult.getMatchingFiles();
+            if (scanResult.hasEmptyDirectories()) {
+                String emptyDirMsg = String.format("The source directory '%s' does not have any files", sourcePattern);
+                consoleLogger.error(emptyDirMsg);
+                LOG.warn(emptyDirMsg);
+                return DefaultGoPluginApiResponse.success(publishArtifactResponse.toJSON());
+            }
+            else if(scanResult.isEmpty()) {
                 String noFilesMsg = String.format("No files are matching pattern: %s", sourcePattern);
                 consoleLogger.error(noFilesMsg);
                 LOG.warn(noFilesMsg);

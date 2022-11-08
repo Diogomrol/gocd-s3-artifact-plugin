@@ -8,7 +8,7 @@ import java.util.List;
 
 public class AntDirectoryScanner {
 
-    public List<File> getFilesMatchingPattern(File baseDir, String pattern) {
+    public ScanResult getFilesMatchingPattern(File baseDir, String pattern) {
         String[] inputPatterns = pattern.trim().split(" *, *");
         String[] parsedPatterns = getParsedPatterns(baseDir, inputPatterns);
 
@@ -37,7 +37,7 @@ public class AntDirectoryScanner {
                 allFiles.add(new File(allPath));
             }
         }
-        return allFiles;
+        return new ScanResult(directories, allFiles);
     }
 
     private String[] getParsedPatterns(File baseDir, String[] inputPatterns) {

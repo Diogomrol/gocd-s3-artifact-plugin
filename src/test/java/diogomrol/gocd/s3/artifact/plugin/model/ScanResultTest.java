@@ -1,10 +1,10 @@
 package diogomrol.gocd.s3.artifact.plugin.model;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,37 +49,47 @@ public class ScanResultTest {
     }
 
     @Test
-    public void shouldReturnTrueForEmptyDirectoriesCheckIfScanResultHasDirectoriesAndNoFiles() {
+    public void shouldReturnTrueIfThereAreDirectories() {
         String[] directories = new String[2];
         directories[0] = "dir";
         directories[1] = "dir/sub-dir-a";
-        ScanResult scanResult = new ScanResult(directories, Collections.emptyList());
+        ScanResult scanResultWithDirsAndFiles = new ScanResult(directories, Collections.singletonList(new File("fileName")));
+        ScanResult scanResultWithDirsAndWithoutFiles = new ScanResult(directories, Collections.emptyList());
 
-        assertThat(scanResult.hasEmptyDirectories()).isTrue();
+        assertThat(scanResultWithDirsAndFiles.hasDirectories()).isTrue();
+        assertThat(scanResultWithDirsAndWithoutFiles.hasDirectories()).isTrue();
     }
 
     @Test
-    public void shouldReturnFalseForEmptyDirectoriesCheckIfScanResultHasNoDirectories() {
+    public void shouldReturnFalseIfThereIsNoDirectory() {
         String[] directories = new String[0];
-        ScanResult scanResult = new ScanResult(directories, Collections.emptyList());
+        ScanResult scanResultWithoutDirsAndWithFiles = new ScanResult(directories, Collections.singletonList(new File("fileName")));
+        ScanResult scanResultWithoutDirsAndFiles = new ScanResult(directories, Collections.emptyList());
 
-        assertThat(scanResult.hasEmptyDirectories()).isFalse();
+        assertThat(scanResultWithoutDirsAndWithFiles.hasDirectories()).isFalse();
+        assertThat(scanResultWithoutDirsAndFiles.hasDirectories()).isFalse();
     }
 
     @Test
-    public void shouldReturnFalseForEmptyDirectoriesCheckIfScanResultHasNoDirectoriesAndNoFiles() {
-        ScanResult scanResult = new ScanResult(new String[0], Collections.emptyList());
+    public void shouldReturnFalseIfThereAreNoFiles() {
+        String[] directories = new String[2];
+        directories[0] = "dir";
+        ScanResult scanResultWithoutFilesAndWithDirs = new ScanResult(directories, Collections.emptyList());
+        ScanResult scanResultWithoutFilesAndDirs = new ScanResult(new String[0], Collections.emptyList());
 
-        assertThat(scanResult.hasEmptyDirectories()).isFalse();
+        assertThat(scanResultWithoutFilesAndWithDirs.hasFiles()).isFalse();
+        assertThat(scanResultWithoutFilesAndDirs.hasFiles()).isFalse();
     }
 
     @Test
-    public void shouldReturnFalseForEmptyDirectoriesCheckIfScanResultHasNoDirectoriesButHasFiles() {
+    public void shouldReturnTrueIfThereAreFiles() {
         String[] directories = new String[0];
         List<File> files = new ArrayList<>();
         files.add(new File("tmpFile"));
-        ScanResult scanResult = new ScanResult(directories, files);
+        ScanResult scanResultWithFilesAndDirs = new ScanResult(directories, files);
+        ScanResult scanResultWithFilesAndWithoutDirs = new ScanResult(new String[0], files);
 
-        assertThat(scanResult.hasEmptyDirectories()).isFalse();
+        assertThat(scanResultWithFilesAndDirs.hasFiles()).isTrue();
+        assertThat(scanResultWithFilesAndWithoutDirs.hasFiles()).isTrue();
     }
 }

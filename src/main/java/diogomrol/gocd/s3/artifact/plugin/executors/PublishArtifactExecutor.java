@@ -74,7 +74,7 @@ public class PublishArtifactExecutor implements RequestExecutor {
 
             ScanResult scanResult = scanner.getFilesMatchingPattern(new File(workingDir), sourcePattern);
             List<File> matchingFiles = scanResult.getMatchingFiles();
-            if (scanResult.hasEmptyDirectories()) {
+            if (scanResult.hasDirectories() && !scanResult.hasFiles()) {
                 String emptyDirMsg = String.format("The source directory '%s' does not have any files", sourcePattern);
                 consoleLogger.error(emptyDirMsg);
                 LOG.warn(emptyDirMsg);

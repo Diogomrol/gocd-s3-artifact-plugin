@@ -20,11 +20,15 @@ public class ScanResult {
         return matchingFiles;
     }
 
-    public boolean hasEmptyDirectories() {
-        return directories.length > 0 && matchingFiles.isEmpty();
+    public boolean hasDirectories() {
+        return directories.length > 0;
+    }
+
+    public boolean hasFiles() {
+        return !matchingFiles.isEmpty();
     }
 
     public boolean isEmpty() {
-        return directories.length == 0 && matchingFiles.isEmpty();
+        return !hasDirectories() && !hasFiles();
     }
 }

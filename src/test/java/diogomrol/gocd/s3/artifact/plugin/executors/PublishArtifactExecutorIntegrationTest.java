@@ -106,6 +106,31 @@ public class PublishArtifactExecutorIntegrationTest {
     }
 
     @Test
+    public void shouldNotPublishAnyArtifactWhenSourceFolderHasNoFilesInIt() {
+        Path binDir = Paths.get(agentWorkingDir.getAbsolutePath(), "bin");
+        binDir.toFile().mkdir();
+
+        Path subDirA = Paths.get(agentWorkingDir.getAbsolutePath(), "bin", "sub-dir-a");
+        subDirA.toFile().mkdir();
+
+        Path subDirB = Paths.get(agentWorkingDir.getAbsolutePath(), "bin", "sub-dir-b");
+        subDirB.toFile().mkdir();
+
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "bin", Optional.of("DestinationFolder"));
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+
+        ObjectListing listing = s3Client.listObjects( bucketName, "DestinationFolder" );
+        List<S3ObjectSummary> summaries = listObjects(listing);
+        assertThat(summaries).isEmpty();
+    }
+
+    @Test
     public void shouldPublishArtifactFilesMatchingPatternWhenNoDestinationFolder() throws IOException {
         final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "*.json", Optional.empty());
         final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
@@ -129,7 +154,6 @@ public class PublishArtifactExecutorIntegrationTest {
                 .extracting(S3ObjectSummary::getKey)
                 .containsExactly("build.json", "test.json");
     }
-
 
     @Test
     public void shouldPublishArtifactFilesMatchingPatternWhenDestinationFolder() throws IOException {

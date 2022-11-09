@@ -358,4 +358,28 @@ public class PublishArtifactExecutorTest {
                 .extracting(PutObjectRequest::getKey)
                 .contains("bin/build.json", "bin/test.json");
     }
+
+    @Test
+    public void shouldNotPublishArtifactWhenThereAreEmptySubDirsInSourceDir() throws IOException, JSONException {
+        final ArtifactPlan artifactPlan = new ArtifactPlan("id", "storeId", "bin", Optional.empty());
+        final ArtifactStore artifactStore = new ArtifactStore(artifactPlan.getId(), storeConfig);
+        final PublishArtifactRequest publishArtifactRequest = new PublishArtifactRequest(artifactStore, artifactPlan, agentWorkingDir.getAbsolutePath());
+
+        Path binDir = Paths.get(agentWorkingDir.getAbsolutePath(), "bin", "sub-dir-a");
+        binDir.toFile().mkdirs();
+
+        Path subDirB = Paths.get(agentWorkingDir.getAbsolutePath(), "bin", "sub-dir-b");
+        subDirB.toFile().mkdir();
+
+        when(request.requestBody()).thenReturn(publishArtifactRequest.toJSON());
+
+        final GoPluginApiResponse response = new PublishArtifactExecutor(request, consoleLogger, s3ClientFactory).execute();
+        assertThat(response.responseCode()).isEqualTo(200);
+        String expectedJSON = "{" +
+                "\"metadata\": {" +
+                "}}";
+        JSONAssert.assertEquals(expectedJSON, response.responseBody(), JSONCompareMode.STRICT);
+
+        verify(s3Client, times(0)).putObject(requestCaptor.capture());
+    }
 }

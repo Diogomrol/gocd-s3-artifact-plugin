@@ -59,6 +59,7 @@ public class PublishArtifactExecutorIntegrationTest {
 
     ArtifactStoreConfig storeConfig;
     private String bucketName;
+    private Boolean pathStyleAccess;
 
     @Before
     public void setUp() throws IOException,  SdkClientException {
@@ -68,7 +69,8 @@ public class PublishArtifactExecutorIntegrationTest {
         bucketName = System.getenv("AWS_BUCKET");
         if(Util.isBlank(bucketName))
             throw new RuntimeException("Must set AWS_BUCKET env var");
-        storeConfig = new ArtifactStoreConfig(bucketName, "eu-west-1", System.getenv("AWS_ACCESS_KEY"), System.getenv("AWS_SECRET_ACCESS_KEY"));
+        pathStyleAccess = !Util.isBlank(System.getenv("AWS_S3_PATH_STYLE_ACCESS"));
+        storeConfig = new ArtifactStoreConfig(bucketName, System.getenv("AWS_DEFAULT_REGION"), System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_ACCESS_KEY"), System.getenv("AWS_S3_ENDPOINT_URL"), pathStyleAccess);
         s3Client = s3ClientFactory.s3(storeConfig);
         ObjectListing listing = s3Client.listObjects( bucketName);
         List<S3ObjectSummary> summaries = listObjects(listing);

@@ -61,7 +61,7 @@ public class FetchArtifactExecutorTest {
         initMocks(this);
         agentWorkingDir = tmpFolder.newFolder("go-agent");
         when(s3ClientFactory.s3(any())).thenReturn(s3Client);
-        storeConfig = new ArtifactStoreConfig("testBucket", "test", "test", "test");
+        storeConfig = new ArtifactStoreConfig("testBucket", "test", "test", "test", "test");
         fetchArtifactConfig = new FetchArtifactConfig();
     }
 

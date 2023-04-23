@@ -123,6 +123,8 @@ public class ValidateArtifactStoreConfigExecutorExecutorTest {
                 .put("Region", "us-west-1")
                 .put("AWSAccessKey", "chuck-norris")
                 .put("AWSSecretAccessKey", "chuck-norris-doesnt-need-passwords")
+                .put("EndpointURL", "https://s3.us-west-1.amazonaws.com")
+                .put("PathStyleAccess", false)
                 .toString();
         when(request.requestBody()).thenReturn(requestBody);
 

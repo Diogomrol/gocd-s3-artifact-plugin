@@ -12,6 +12,8 @@ import diogomrol.gocd.s3.artifact.plugin.ConsoleLogger;
 import diogomrol.gocd.s3.artifact.plugin.IntegrationTests;
 import diogomrol.gocd.s3.artifact.plugin.S3ClientFactory;
 import diogomrol.gocd.s3.artifact.plugin.model.*;
+import diogomrol.gocd.s3.artifact.plugin.utils.Util;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +52,7 @@ public class PublishAndFetchIntegrationTest {
     ArtifactStoreConfig storeConfig;
     private String bucketName;
     private File destinationWorkingDir;
+    private Boolean pathStyleAccess;
 
     @Before
     public void setUp() throws IOException, SdkClientException {
@@ -58,7 +61,8 @@ public class PublishAndFetchIntegrationTest {
         sourceWorkingDir = temporaryFolder.newFolder("go-agent-source");
         destinationWorkingDir = temporaryFolder.newFolder("go-agent-dest");
         bucketName = System.getenv("AWS_BUCKET");
-        storeConfig = new ArtifactStoreConfig(bucketName, "eu-west-1", System.getenv("AWS_ACCESS_KEY"), System.getenv("AWS_SECRET_ACCESS_KEY"));
+        pathStyleAccess = !Util.isBlank(System.getenv("AWS_S3_PATH_STYLE_ACCESS"));
+        storeConfig = new ArtifactStoreConfig(bucketName, System.getenv("AWS_DEFAULT_REGION"), System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_ACCESS_KEY"), System.getenv("AWS_S3_ENDPOINT_URL"), pathStyleAccess);
         s3Client = s3ClientFactory.s3(storeConfig);
         ObjectListing listing = s3Client.listObjects( bucketName);
         List<S3ObjectSummary> summaries = listObjects(listing);

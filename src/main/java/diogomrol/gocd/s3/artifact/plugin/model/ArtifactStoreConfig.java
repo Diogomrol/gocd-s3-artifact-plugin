@@ -30,7 +30,7 @@ import java.util.List;
 
 public class ArtifactStoreConfig implements Validatable {
 
-    private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Region", "AWSAccessKey", "AWSSecretAccessKey");
+    private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Region", "AWSAccessKey", "AWSSecretAccessKey", "EndpointURL", "PathStyleAccess");
     private static final ImmutableSet<String> AWS_ACCESS_PROPERTIES = ImmutableSet.of("AWSAccessKey", "AWSSecretAccessKey");
 
     @Expose
@@ -53,6 +53,16 @@ public class ArtifactStoreConfig implements Validatable {
     @FieldMetadata(key = "AWSSecretAccessKey", required = false, secure = true)
     private String awssecretaccesskey;
 
+    @Expose
+    @SerializedName("EndpointURL")
+    @FieldMetadata(key = "EndpointURL", required = false, secure = false)
+    private String endpointurl;
+
+    @Expose
+    @SerializedName("PathStyleAccess")
+    @FieldMetadata(key = "PathStyleAccess", required = false, secure = false)
+    private Boolean pathstyleaccess;
+
 
     public ArtifactStoreConfig() {
     }
@@ -62,13 +72,35 @@ public class ArtifactStoreConfig implements Validatable {
         this.region = region;
         this.awsaccesskey = awsaccesskey;
         this.awssecretaccesskey = awssecretaccesskey;
+        this.endpointurl = null;
+        this.pathstyleaccess = false;
+    }
+
+    public ArtifactStoreConfig(String s3bucket, String region, String awsaccesskey, String awssecretaccesskey, String endpointurl) {
+        this.s3bucket = s3bucket;
+        this.region = region;
+        this.awsaccesskey = awsaccesskey;
+        this.awssecretaccesskey = awssecretaccesskey;
+        this.endpointurl = endpointurl;
+        this.pathstyleaccess = false;
+    }
+
+    public ArtifactStoreConfig(String s3bucket, String region, String awsaccesskey, String awssecretaccesskey, String endpointurl, Boolean pathstyleaccess) {
+        this.s3bucket = s3bucket;
+        this.region = region;
+        this.awsaccesskey = awsaccesskey;
+        this.awssecretaccesskey = awssecretaccesskey;
+        this.endpointurl = endpointurl;
+        this.pathstyleaccess = pathstyleaccess;
     }
 
     public String getS3bucket() {
         return s3bucket;
     }
 
-    public String getRegion () { return region; }
+    public String getRegion () { 
+        return region;
+    }
 
     public String getAwsaccesskey() {
         return awsaccesskey;
@@ -76,6 +108,14 @@ public class ArtifactStoreConfig implements Validatable {
 
     public String getAwssecretaccesskey() {
         return awssecretaccesskey;
+    }
+
+    public String getEndpointURL() {
+        return endpointurl;
+    }
+
+    public Boolean getPathStyleAccess() {
+        return pathstyleaccess;
     }
 
     @Override
@@ -88,6 +128,8 @@ public class ArtifactStoreConfig implements Validatable {
         if (s3bucket != null ? !s3bucket.equals(that.s3bucket) : that.s3bucket != null) return false;
         if (region != null ? !region.equals(that.region) : that.region != null) return false;
         if (awsaccesskey != null ? !awsaccesskey.equals(that.awsaccesskey) : that.awsaccesskey != null) return false;
+        if (endpointurl != null ? !endpointurl.equals(that.endpointurl) : that.endpointurl != null) return false;
+        if (pathstyleaccess != null ? !pathstyleaccess.equals(that.pathstyleaccess) : that.pathstyleaccess != null) return false;
         return awssecretaccesskey != null ? awssecretaccesskey.equals(that.awssecretaccesskey) : that.awssecretaccesskey == null;
     }
 
@@ -97,6 +139,8 @@ public class ArtifactStoreConfig implements Validatable {
         result = 31 * result + (region != null ? region.hashCode() : 0);
         result = 31 * result + (awsaccesskey != null ? awsaccesskey.hashCode() : 0);
         result = 31 * result + (awssecretaccesskey != null ? awssecretaccesskey.hashCode() : 0);
+        result = 31 * result + (endpointurl != null ? endpointurl.hashCode() : 0);
+        result = 31 * result + (pathstyleaccess != null ? pathstyleaccess.hashCode() : 0);
         return result;
     }
 

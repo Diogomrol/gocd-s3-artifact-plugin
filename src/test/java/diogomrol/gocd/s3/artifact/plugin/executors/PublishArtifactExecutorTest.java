@@ -82,7 +82,7 @@ public class PublishArtifactExecutorTest {
         initMocks(this);
         agentWorkingDir = tmpFolder.newFolder("go-agent");
         when(s3ClientFactory.s3(any())).thenReturn(s3Client);
-        storeConfig = new ArtifactStoreConfig("test", "test", "test", "test");
+        storeConfig = new ArtifactStoreConfig("test", "test", "test", "test", "test", false);
     }
 
     @Test

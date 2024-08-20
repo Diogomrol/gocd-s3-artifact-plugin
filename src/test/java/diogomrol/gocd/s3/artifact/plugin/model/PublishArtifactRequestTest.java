@@ -52,7 +52,7 @@ public class PublishArtifactRequestTest {
 
         assertThat(publishArtifactRequest.getArtifactStore().getId()).isEqualTo("s3-store");
         assertThat(publishArtifactRequest.getArtifactStore().getArtifactStoreConfig())
-                .isEqualTo(new ArtifactStoreConfig("s3-url", "us-west-1", "aws-access-key", "aws-secret-access-key"));
+                .isEqualTo(new ArtifactStoreConfig("s3-url", "us-west-1", "aws-access-key", "aws-secret-access-key", "https://storage.googleapis.com"));
 
         assertThat(publishArtifactRequest.getArtifactPlan())
                 .isEqualTo(new ArtifactPlan("installers", "s3-store", "alpine-build.json", Optional.empty()));

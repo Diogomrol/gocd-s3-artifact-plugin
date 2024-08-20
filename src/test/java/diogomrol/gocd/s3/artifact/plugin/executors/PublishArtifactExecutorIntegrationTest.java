@@ -68,7 +68,7 @@ public class PublishArtifactExecutorIntegrationTest {
         bucketName = System.getenv("AWS_BUCKET");
         if(Util.isBlank(bucketName))
             throw new RuntimeException("Must set AWS_BUCKET env var");
-        storeConfig = new ArtifactStoreConfig(bucketName, "eu-west-1", System.getenv("AWS_ACCESS_KEY"), System.getenv("AWS_SECRET_ACCESS_KEY"));
+        storeConfig = new ArtifactStoreConfig(bucketName, "eu-west-1", System.getenv("AWS_ACCESS_KEY"), System.getenv("AWS_SECRET_ACCESS_KEY"), "https://storage.googleapis.com");
         s3Client = s3ClientFactory.s3(storeConfig);
         ObjectListing listing = s3Client.listObjects( bucketName);
         List<S3ObjectSummary> summaries = listObjects(listing);

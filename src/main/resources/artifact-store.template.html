@@ -31,6 +31,12 @@
 </div>
 
 <div class="form_item_block">
+    <label ng-class="{'is-invalid-label': GOINPUTNAME[ServiceEndpoint].$error.server}">Service Endpoint</label>
+    <input ng-class="{'is-invalid-input': GOINPUTNAME[ServiceEndpoint].$error.server}" type="text" ng-model="ServiceEndpoint" ng-required="false"/>
+    <span class="form_error form-error" ng-class="{'is-visible': GOINPUTNAME[ServiceEndpoint].$error.server}" ng-show="GOINPUTNAME[ServiceEndpoint].$error.server">{{GOINPUTNAME[ServiceEndpoint].$error.server}}</span>
+</div>
+
+<div class="form_item_block">
     <label ng-class="{'is-invalid-label': GOINPUTNAME[AWSAccessKey].$error.server}">AWS Access Key Id:</label>
     <input ng-class="{'is-invalid-input': GOINPUTNAME[AWSAccessKey].$error.server}" type="text" ng-model="AWSAccessKey" ng-required="false"/>
     <span class="form_error form-error" ng-class="{'is-visible': GOINPUTNAME[AWSAccessKey].$error.server}" ng-show="GOINPUTNAME[AWSAccessKey].$error.server">{{GOINPUTNAME[AWSAccessKey].$error.server}}</span>

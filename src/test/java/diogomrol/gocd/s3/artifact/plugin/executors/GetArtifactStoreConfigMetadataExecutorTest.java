@@ -56,6 +56,13 @@ public class GetArtifactStoreConfigMetadataExecutorTest {
                 "      \"required\": false,\n" +
                 "      \"secure\": true\n" +
                 "    }\n" +
+                "  },\n" +
+                " {\n" +
+                "    \"key\": \"ServiceEndpoint\",\n" +
+                "    \"metadata\": {\n" +
+                "      \"required\": false,\n" +
+                "      \"secure\": false\n" +
+                "    }\n" +
                 "  }\n" +
                 "]";
 

@@ -3,6 +3,7 @@ import diogomrol.gocd.s3.artifact.plugin.model.ArtifactStoreConfig;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -22,9 +23,8 @@ public class S3ClientFactory {
     private static AmazonS3 createClient(ArtifactStoreConfig artifactStoreConfig) throws SdkClientException {
         AmazonS3ClientBuilder s3ClientBuilder = AmazonS3ClientBuilder.standard();
 
-        if (StringUtils.isNotBlank(artifactStoreConfig.getRegion())) {
-            s3ClientBuilder = s3ClientBuilder.withRegion(Regions.fromName(artifactStoreConfig.getRegion()));
-        }
+        EndpointConfiguration endpointConfiguration = new EndpointConfiguration(artifactStoreConfig.getServiceEndpoint(), artifactStoreConfig.getRegion());
+        s3ClientBuilder = s3ClientBuilder.withEndpointConfiguration(endpointConfiguration);
 
         if (StringUtils.isNotBlank(artifactStoreConfig.getAwsaccesskey()) && StringUtils.isNotBlank(artifactStoreConfig.getAwssecretaccesskey())) {
             BasicAWSCredentials awsCredentials = new BasicAWSCredentials(artifactStoreConfig.getAwsaccesskey(), artifactStoreConfig.getAwssecretaccesskey());

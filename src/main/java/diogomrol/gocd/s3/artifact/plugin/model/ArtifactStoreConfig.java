@@ -30,7 +30,7 @@ import java.util.List;
 
 public class ArtifactStoreConfig implements Validatable {
 
-    private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Region", "AWSAccessKey", "AWSSecretAccessKey");
+    private static final ImmutableSet<String> OPTIONAL_PROPERTIES = ImmutableSet.of("Region", "AWSAccessKey", "AWSSecretAccessKey", "ServiceEndpoint");
     private static final ImmutableSet<String> AWS_ACCESS_PROPERTIES = ImmutableSet.of("AWSAccessKey", "AWSSecretAccessKey");
 
     @Expose
@@ -53,15 +53,20 @@ public class ArtifactStoreConfig implements Validatable {
     @FieldMetadata(key = "AWSSecretAccessKey", required = false, secure = true)
     private String awssecretaccesskey;
 
+    @Expose
+    @SerializedName("ServiceEndpoint")
+    @FieldMetadata(key = "ServiceEndpoint", required = false)
+    private String serviceendpoint;
 
     public ArtifactStoreConfig() {
     }
 
-    public ArtifactStoreConfig(String s3bucket, String region, String awsaccesskey, String awssecretaccesskey) {
+    public ArtifactStoreConfig(String s3bucket, String region, String awsaccesskey, String awssecretaccesskey, String serviceendpoint) {
         this.s3bucket = s3bucket;
         this.region = region;
         this.awsaccesskey = awsaccesskey;
         this.awssecretaccesskey = awssecretaccesskey;
+        this.serviceendpoint = serviceendpoint;
     }
 
     public String getS3bucket() {
@@ -76,6 +81,10 @@ public class ArtifactStoreConfig implements Validatable {
 
     public String getAwssecretaccesskey() {
         return awssecretaccesskey;
+    }
+
+    public String getServiceEndpoint() {
+        return serviceendpoint;
     }
 
     @Override

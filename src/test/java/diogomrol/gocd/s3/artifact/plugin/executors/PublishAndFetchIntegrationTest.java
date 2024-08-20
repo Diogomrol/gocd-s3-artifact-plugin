@@ -58,7 +58,7 @@ public class PublishAndFetchIntegrationTest {
         sourceWorkingDir = temporaryFolder.newFolder("go-agent-source");
         destinationWorkingDir = temporaryFolder.newFolder("go-agent-dest");
         bucketName = System.getenv("AWS_BUCKET");
-        storeConfig = new ArtifactStoreConfig(bucketName, "eu-west-1", System.getenv("AWS_ACCESS_KEY"), System.getenv("AWS_SECRET_ACCESS_KEY"));
+        storeConfig = new ArtifactStoreConfig(bucketName, "eu-west-1", System.getenv("AWS_ACCESS_KEY"), System.getenv("AWS_SECRET_ACCESS_KEY"),"https://storage.googleapis.com");
         s3Client = s3ClientFactory.s3(storeConfig);
         ObjectListing listing = s3Client.listObjects( bucketName);
         List<S3ObjectSummary> summaries = listObjects(listing);
